@@ -13,5 +13,5 @@ export const initialFormData: BillReminderFormData = {
   amount: "",
   category: "",
   notes: "",
-  reminders_enabled: false,
+  reminders_enabled: true,
 };

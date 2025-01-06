@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import BudgetSummary from "@/components/BudgetSummary";
+import { BillRemindersCard } from "@/components/BillRemindersCard";
 
 interface Budget {
   salary: number;
@@ -103,12 +104,20 @@ const Index = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-4 md:mb-0">Monthly Budget Overview</h1>
-          <Button 
-            onClick={() => navigate("/createbudget")}
-            className="bg-white text-indigo-600 hover:bg-gray-100"
-          >
-            Create New Budget
-          </Button>
+          <div className="space-x-4">
+            <Button 
+              onClick={() => navigate("/createbudget")}
+              className="bg-white text-indigo-600 hover:bg-gray-100"
+            >
+              Create New Budget
+            </Button>
+            <Button 
+              onClick={() => navigate("/billreminders")}
+              className="bg-white text-indigo-600 hover:bg-gray-100"
+            >
+              Manage Bill Reminders
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-8">
@@ -131,9 +140,9 @@ const Index = () => {
                 remaining={remaining}
               />
 
-              <Card className="bg-white/10 backdrop-blur-lg text-white">
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="bg-white/10 backdrop-blur-lg text-white">
+                  <CardContent className="p-6">
                     <div className="space-y-4">
                       <h3 className="font-semibold text-lg">Income</h3>
                       <div className="space-y-2">
@@ -147,6 +156,11 @@ const Index = () => {
                         </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/10 backdrop-blur-lg text-white">
+                  <CardContent className="p-6">
                     <div className="space-y-4">
                       <h3 className="font-semibold text-lg">Expenses</h3>
                       <div className="space-y-2">
@@ -167,9 +181,11 @@ const Index = () => {
                         ))}
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <BillRemindersCard />
             </>
           ) : (
             <Card className="bg-white/10 backdrop-blur-lg text-white">
