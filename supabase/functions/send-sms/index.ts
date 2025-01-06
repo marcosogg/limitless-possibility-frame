@@ -26,6 +26,7 @@ serve(async (req) => {
       To: reminder.phone_number,
       From: Deno.env.get('TWILIO_PHONE_NUMBER') || '',
       Body: messageBody,
+      MessagingServiceSid: 'MG13f71a02e5e771f315e86e3efaeecdf9'
     });
 
     // For scheduled messages, we'll use the regular send method if no scheduleDate is provided
