@@ -11,6 +11,7 @@ export function BillReminderForm() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BillReminderFormData>(initialFormData);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +32,10 @@ export function BillReminderForm() {
       const amount = parseFloat(formData.amount);
       if (isNaN(amount) || amount <= 0) {
         throw new Error("Amount must be a positive number");
+      }
+
+      if (formData.reminders_enabled && !phoneNumber) {
+        throw new Error("Phone number is required for SMS reminders");
       }
 
       // Check for existing bill reminders with the same provider name
@@ -57,41 +62,44 @@ export function BillReminderForm() {
         category: formData.category,
         notes: formData.notes || null,
         reminders_enabled: formData.reminders_enabled,
+        phone_number: formData.reminders_enabled ? phoneNumber : null,
         user_id: user.id
       });
 
       if (insertError) throw insertError;
 
       if (formData.reminders_enabled) {
-        console.log('Calling send-whatsapp function with data:', {
+        console.log('Calling send-sms function with data:', {
           provider_name: formData.provider_name,
           due_date: dueDate,
-          amount: amount
+          amount: amount,
+          phone_number: phoneNumber
         });
 
-        const { data: whatsappData, error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
+        const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms', {
           body: {
             reminder: {
               provider_name: formData.provider_name,
               due_date: dueDate,
-              amount: amount
+              amount: amount,
+              phone_number: phoneNumber
             }
           }
         });
 
-        console.log('WhatsApp function response:', { data: whatsappData, error: whatsappError });
+        console.log('SMS function response:', { data: smsData, error: smsError });
 
-        if (whatsappError) {
-          console.error('Failed to send WhatsApp message:', whatsappError);
+        if (smsError) {
+          console.error('Failed to send SMS:', smsError);
           toast({
             variant: "destructive",
             title: "Warning",
-            description: "Bill reminder created but WhatsApp notification failed to send.",
+            description: "Bill reminder created but SMS notification failed to send.",
           });
         } else {
           toast({
             title: "Success",
-            description: "Bill reminder created and WhatsApp notification sent successfully.",
+            description: "Bill reminder created and SMS notification sent successfully.",
           });
         }
       } else {
@@ -102,6 +110,7 @@ export function BillReminderForm() {
       }
 
       setFormData(initialFormData);
+      setPhoneNumber("");
     } catch (error: any) {
       console.error('Form submission error:', error);
       toast({
@@ -165,6 +174,8 @@ export function BillReminderForm() {
       <WhatsAppToggle
         checked={formData.reminders_enabled}
         onChange={(checked) => setFormData({ ...formData, reminders_enabled: checked })}
+        phoneNumber={phoneNumber}
+        onPhoneNumberChange={setPhoneNumber}
       />
 
       <Button type="submit" disabled={loading}>
