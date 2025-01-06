@@ -1,10 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen gradient-bg text-white">
       <div className="container mx-auto px-4 py-16 md:py-32">
+        <div className="flex justify-end mb-8">
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="text-white border-white hover:bg-white hover:text-indigo-600"
+          >
+            Logout
+          </Button>
+        </div>
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
