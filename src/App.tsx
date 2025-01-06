@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CreateBudget from "./pages/CreateBudget";
+import BillReminders from "./pages/BillReminders";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <CreateBudget />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billreminders"
+            element={
+              <ProtectedRoute>
+                <BillReminders />
               </ProtectedRoute>
             }
           />
