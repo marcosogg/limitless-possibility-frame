@@ -48,6 +48,24 @@ const CreateBudget = () => {
         return;
       }
 
+      // Check if a budget already exists for this month and year
+      const { data: existingBudget } = await supabase
+        .from("budgets")
+        .select()
+        .eq('user_id', user.id)
+        .eq('month', selectedMonth)
+        .eq('year', selectedYear)
+        .single();
+
+      if (existingBudget) {
+        toast({
+          title: "Error",
+          description: `A budget for ${new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} ${selectedYear} already exists.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.from("budgets").insert({
         month: selectedMonth,
         year: selectedYear,
