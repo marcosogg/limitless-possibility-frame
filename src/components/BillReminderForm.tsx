@@ -50,7 +50,7 @@ export function BillReminderForm() {
         }
       }
 
-      const { error } = await supabase.from("bill_reminders").insert({
+      const { error: insertError } = await supabase.from("bill_reminders").insert({
         provider_name: formData.provider_name,
         due_date: dueDate,
         amount: amount,
@@ -60,10 +60,16 @@ export function BillReminderForm() {
         user_id: user.id
       });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       if (formData.reminders_enabled) {
-        const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
+        console.log('Calling send-whatsapp function with data:', {
+          provider_name: formData.provider_name,
+          due_date: dueDate,
+          amount: amount
+        });
+
+        const { data: whatsappData, error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
           body: {
             reminder: {
               provider_name: formData.provider_name,
@@ -73,6 +79,8 @@ export function BillReminderForm() {
           }
         });
 
+        console.log('WhatsApp function response:', { data: whatsappData, error: whatsappError });
+
         if (whatsappError) {
           console.error('Failed to send WhatsApp message:', whatsappError);
           toast({
@@ -80,16 +88,22 @@ export function BillReminderForm() {
             title: "Warning",
             description: "Bill reminder created but WhatsApp notification failed to send.",
           });
+        } else {
+          toast({
+            title: "Success",
+            description: "Bill reminder created and WhatsApp notification sent successfully.",
+          });
         }
+      } else {
+        toast({
+          title: "Success",
+          description: "Bill reminder created successfully",
+        });
       }
-
-      toast({
-        title: "Success",
-        description: "Bill reminder created successfully",
-      });
 
       setFormData(initialFormData);
     } catch (error: any) {
+      console.error('Form submission error:', error);
       toast({
         variant: "destructive",
         title: "Error",
