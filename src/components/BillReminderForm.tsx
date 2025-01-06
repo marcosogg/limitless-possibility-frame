@@ -83,6 +83,23 @@ export function BillReminderForm() {
             const date = new Date(scheduleDate);
             const [hours, minutes] = scheduleTime.split(':');
             date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            
+            // Ensure the scheduled time is at least 5 minutes in the future
+            const minScheduleTime = new Date();
+            minScheduleTime.setMinutes(minScheduleTime.getMinutes() + 5);
+            
+            if (date < minScheduleTime) {
+              throw new Error("Schedule time must be at least 5 minutes in the future");
+            }
+            
+            // Check if it's not more than 35 days in the future
+            const maxScheduleTime = new Date();
+            maxScheduleTime.setDate(maxScheduleTime.getDate() + 35);
+            
+            if (date > maxScheduleTime) {
+              throw new Error("Schedule time cannot be more than 35 days in the future");
+            }
+            
             scheduledDateTime = date.toISOString();
           }
 

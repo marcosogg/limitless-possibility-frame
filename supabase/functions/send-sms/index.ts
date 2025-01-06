@@ -29,18 +29,23 @@ serve(async (req) => {
       MessagingServiceSid: 'MG13f71a02e5e771f315e86e3efaeecdf9'
     });
 
-    // For scheduled messages, we'll use the regular send method if no scheduleDate is provided
+    // Validate and add scheduling if provided
     if (scheduleDate) {
-      console.log('Scheduling message for:', scheduleDate);
-      const scheduledDate = new Date(scheduleDate);
+      const scheduledTime = new Date(scheduleDate);
+      const now = new Date();
+      const diffInSeconds = (scheduledTime.getTime() - now.getTime()) / 1000;
       
-      // Only schedule if the date is in the future
-      if (scheduledDate > new Date()) {
-        twilioParams.append('SendAt', scheduledDate.toISOString());
-        twilioParams.append('ScheduleType', 'fixed');
-      } else {
-        console.log('Schedule date is in the past, sending immediately');
+      // Validate scheduling time constraints
+      if (diffInSeconds < 300) {
+        throw new Error('Schedule time must be at least 5 minutes in the future');
       }
+      if (diffInSeconds > 3024000) {
+        throw new Error('Schedule time cannot be more than 35 days in the future');
+      }
+
+      console.log('Scheduling message for:', scheduledTime.toISOString());
+      twilioParams.append('SendAt', scheduledTime.toISOString());
+      twilioParams.append('ScheduleType', 'fixed');
     }
 
     console.log('Attempting to send SMS via Twilio');
