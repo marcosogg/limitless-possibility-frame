@@ -15,7 +15,6 @@ interface FormData {
   amount: string;
   category: string;
   notes: string;
-  phone_number: string;
   reminders_enabled: boolean;
 }
 
@@ -25,7 +24,6 @@ const initialFormData: FormData = {
   amount: "",
   category: "",
   notes: "",
-  phone_number: "",
   reminders_enabled: false,
 };
 
@@ -61,12 +59,33 @@ export function BillReminderForm() {
         amount: amount,
         category: formData.category,
         notes: formData.notes || null,
-        phone_number: formData.phone_number || null,
         reminders_enabled: formData.reminders_enabled,
         user_id: user.id
       });
 
       if (error) throw error;
+
+      // Test the WhatsApp notification
+      if (formData.reminders_enabled) {
+        const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
+          body: {
+            reminder: {
+              provider_name: formData.provider_name,
+              due_date: dueDate,
+              amount: amount
+            }
+          }
+        });
+
+        if (whatsappError) {
+          console.error('Failed to send WhatsApp message:', whatsappError);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: "Bill reminder created but WhatsApp notification failed to send.",
+          });
+        }
+      }
 
       toast({
         title: "Success",
@@ -154,18 +173,6 @@ export function BillReminderForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone_number">Phone Number (Optional)</Label>
-        <Input
-          id="phone_number"
-          value={formData.phone_number}
-          onChange={(e) =>
-            setFormData({ ...formData, phone_number: e.target.value })
-          }
-          placeholder="Enter phone number for SMS reminders"
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="notes">Notes (Optional)</Label>
         <Textarea
           id="notes"
@@ -175,6 +182,19 @@ export function BillReminderForm() {
           }
           placeholder="Add any additional notes"
         />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="reminders_enabled"
+          checked={formData.reminders_enabled}
+          onChange={(e) =>
+            setFormData({ ...formData, reminders_enabled: e.target.checked })
+          }
+          className="h-4 w-4 rounded border-gray-300"
+        />
+        <Label htmlFor="reminders_enabled">Enable WhatsApp Reminders</Label>
       </div>
 
       <Button type="submit" disabled={loading}>
