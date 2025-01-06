@@ -28,10 +28,18 @@ serve(async (req) => {
       Body: messageBody,
     });
 
-    // Add scheduleDate if provided
+    // For scheduled messages, we'll use the regular send method if no scheduleDate is provided
     if (scheduleDate) {
-      twilioParams.append('SendAt', new Date(scheduleDate).toISOString());
-      twilioParams.append('ScheduleType', 'fixed');
+      console.log('Scheduling message for:', scheduleDate);
+      const scheduledDate = new Date(scheduleDate);
+      
+      // Only schedule if the date is in the future
+      if (scheduledDate > new Date()) {
+        twilioParams.append('SendAt', scheduledDate.toISOString());
+        twilioParams.append('ScheduleType', 'fixed');
+      } else {
+        console.log('Schedule date is in the past, sending immediately');
+      }
     }
 
     console.log('Attempting to send SMS via Twilio');
@@ -55,7 +63,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: scheduleDate ? 'SMS scheduled successfully' : 'SMS sent successfully' }), 
+      JSON.stringify({ 
+        success: true, 
+        message: scheduleDate ? 'SMS scheduled successfully' : 'SMS sent successfully',
+        result 
+      }), 
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
