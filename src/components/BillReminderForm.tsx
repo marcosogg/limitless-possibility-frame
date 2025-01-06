@@ -33,6 +33,23 @@ export function BillReminderForm() {
         throw new Error("Amount must be a positive number");
       }
 
+      // Check for existing bill reminders with the same provider name
+      const { data: existingBills } = await supabase
+        .from("bill_reminders")
+        .select("id, provider_name")
+        .eq("user_id", user.id)
+        .eq("provider_name", formData.provider_name);
+
+      if (existingBills && existingBills.length > 0) {
+        const proceed = window.confirm(
+          `You already have a bill reminder for ${formData.provider_name}. Would you like to create another one?`
+        );
+        if (!proceed) {
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.from("bill_reminders").insert({
         provider_name: formData.provider_name,
         due_date: dueDate,
