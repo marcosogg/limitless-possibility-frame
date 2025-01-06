@@ -12,11 +12,26 @@ serve(async (req) => {
   }
 
   try {
-    const { reminder } = await req.json();
+    const { reminder, scheduleDate } = await req.json();
     console.log('Received reminder data:', reminder);
+    console.log('Schedule date:', scheduleDate);
 
     if (!reminder || !reminder.provider_name || !reminder.due_date || !reminder.amount || !reminder.phone_number) {
       throw new Error('Missing required reminder data');
+    }
+
+    const messageBody = `Reminder: Your ${reminder.provider_name} bill of €${reminder.amount} is due on day ${reminder.due_date} of this month.`;
+    
+    const twilioParams = new URLSearchParams({
+      To: reminder.phone_number,
+      From: Deno.env.get('TWILIO_PHONE_NUMBER') || '',
+      Body: messageBody,
+    });
+
+    // Add scheduleDate if provided
+    if (scheduleDate) {
+      twilioParams.append('SendAt', new Date(scheduleDate).toISOString());
+      twilioParams.append('ScheduleType', 'fixed');
     }
 
     console.log('Attempting to send SMS via Twilio');
@@ -28,11 +43,7 @@ serve(async (req) => {
           'Authorization': `Basic ${btoa(`${Deno.env.get('TWILIO_ACCOUNT_SID')}:${Deno.env.get('TWILIO_AUTH_TOKEN')}`)}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          To: reminder.phone_number,
-          From: Deno.env.get('TWILIO_PHONE_NUMBER') || '',
-          Body: `Reminder: Your ${reminder.provider_name} bill of €${reminder.amount} is due on day ${reminder.due_date} of this month.`,
-        }),
+        body: twilioParams,
       }
     );
 
@@ -44,7 +55,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'SMS sent successfully' }), 
+      JSON.stringify({ success: true, message: scheduleDate ? 'SMS scheduled successfully' : 'SMS sent successfully' }), 
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 

@@ -11,6 +11,7 @@ export function BillReminderForm() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BillReminderFormData>(initialFormData);
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>(['']);
+  const [scheduleDate, setScheduleDate] = useState<Date>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +81,8 @@ export function BillReminderForm() {
                 due_date: dueDate,
                 amount: amount,
                 phone_number: phoneNumber
-              }
+              },
+              scheduleDate: scheduleDate?.toISOString()
             }
           });
 
@@ -97,11 +99,14 @@ export function BillReminderForm() {
 
       toast({
         title: "Success",
-        description: "Bill reminder(s) created successfully",
+        description: scheduleDate 
+          ? "Bill reminder(s) created and SMS scheduled successfully"
+          : "Bill reminder(s) created successfully",
       });
 
       setFormData(initialFormData);
       setPhoneNumbers(['']);
+      setScheduleDate(undefined);
     } catch (error: any) {
       console.error('Form submission error:', error);
       toast({
@@ -129,6 +134,8 @@ export function BillReminderForm() {
         onChange={(checked) => setFormData({ ...formData, reminders_enabled: checked })}
         phoneNumber={phoneNumbers[0]}
         onPhoneNumberChange={handlePhoneNumberChange}
+        scheduleDate={scheduleDate}
+        onScheduleDateChange={setScheduleDate}
       />
 
       <Button type="submit" disabled={loading}>

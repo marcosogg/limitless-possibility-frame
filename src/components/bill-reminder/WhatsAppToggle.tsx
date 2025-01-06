@@ -2,20 +2,27 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Calendar } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface WhatsAppToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   phoneNumber: string;
   onPhoneNumberChange: (phoneNumber: string, index?: number) => void;
+  scheduleDate: Date | undefined;
+  onScheduleDateChange: (date: Date | undefined) => void;
 }
 
 export function WhatsAppToggle({ 
   checked, 
   onChange, 
   phoneNumber, 
-  onPhoneNumberChange 
+  onPhoneNumberChange,
+  scheduleDate,
+  onScheduleDateChange
 }: WhatsAppToggleProps) {
   const [additionalPhones, setAdditionalPhones] = useState<string[]>([]);
 
@@ -124,6 +131,40 @@ export function WhatsAppToggle({
                 </Button>
               </div>
             )}
+
+            <div className="ml-6 space-y-2">
+              <Label className="text-sm text-gray-600">Schedule Reminder (Optional)</Label>
+              <div className="flex items-center space-x-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-[240px] justify-start text-left font-normal ${!scheduleDate && "text-muted-foreground"}`}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {scheduleDate ? format(scheduleDate, "PPP") : "Schedule for later"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={scheduleDate}
+                      onSelect={onScheduleDateChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                {scheduleDate && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onScheduleDateChange(undefined)}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
