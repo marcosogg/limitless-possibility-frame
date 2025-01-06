@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import BudgetSummary from "@/components/BudgetSummary";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { BudgetCards } from "@/components/dashboard/BudgetCards";
 
 interface Budget {
   salary: number;
@@ -22,8 +22,7 @@ interface Budget {
   savings: number;
 }
 
-const Index = () => {
-  const navigate = useNavigate();
+export default function Index() {
   const { toast } = useToast();
   const [budget, setBudget] = useState<Budget | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,23 +101,7 @@ const Index = () => {
   return (
     <div className="min-h-screen gradient-bg p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4 md:mb-0">Monthly Budget Overview</h1>
-          <div className="space-x-4">
-            <Button 
-              onClick={() => navigate("/createbudget")}
-              className="bg-white text-indigo-600 hover:bg-gray-100"
-            >
-              Create New Budget
-            </Button>
-            <Button 
-              onClick={() => navigate("/billreminders")}
-              className="bg-white text-indigo-600 hover:bg-gray-100"
-            >
-              Manage Bill Reminders
-            </Button>
-          </div>
-        </div>
+        <DashboardHeader />
 
         <div className="space-y-8">
           <MonthYearPicker
@@ -140,51 +123,7 @@ const Index = () => {
                 remaining={remaining}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Card className="bg-white/10 backdrop-blur-lg text-white">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg">Income</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Salary</span>
-                          <span>{formatCurrency(budget.salary)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Bonus</span>
-                          <span>{formatCurrency(budget.bonus)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/10 backdrop-blur-lg text-white">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg">Expenses</h3>
-                      <div className="space-y-2">
-                        {[
-                          ['Rent', budget.rent],
-                          ['Utilities', budget.utilities],
-                          ['Groceries', budget.groceries],
-                          ['Transport', budget.transport],
-                          ['Entertainment', budget.entertainment],
-                          ['Shopping', budget.shopping],
-                          ['Miscellaneous', budget.miscellaneous],
-                          ['Savings', budget.savings],
-                        ].map(([label, value]) => (
-                          <div key={label} className="flex justify-between">
-                            <span>{label}</span>
-                            <span>{formatCurrency(value as number)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
+              <BudgetCards budget={budget} formatCurrency={formatCurrency} />
               <BillRemindersCard />
             </>
           ) : (
@@ -204,6 +143,4 @@ const Index = () => {
       </div>
     </div>
   );
-};
-
-export default Index;
+}

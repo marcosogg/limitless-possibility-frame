@@ -2,9 +2,8 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FormField } from "./bill-reminder/FormField";
-import { CategorySelector } from "./bill-reminder/CategorySelector";
 import { WhatsAppToggle } from "./bill-reminder/WhatsAppToggle";
+import { BillReminderFormFields } from "./bill-reminder/BillReminderFormFields";
 import { BillReminderFormData, initialFormData } from "@/types/bill-reminder";
 
 export function BillReminderForm() {
@@ -123,52 +122,8 @@ export function BillReminderForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormField
-        id="provider_name"
-        label="Provider Name"
-        required
-        value={formData.provider_name}
-        onChange={(value) => setFormData({ ...formData, provider_name: value })}
-        placeholder="e.g., Electric Ireland"
-      />
-
-      <FormField
-        id="due_date"
-        label="Due Date (Day of Month)"
-        type="number"
-        required
-        value={formData.due_date}
-        onChange={(value) => setFormData({ ...formData, due_date: value })}
-        placeholder="Enter day (1-31)"
-        min="1"
-        max="31"
-      />
-
-      <FormField
-        id="amount"
-        label="Amount (€)"
-        type="number"
-        required
-        value={formData.amount}
-        onChange={(value) => setFormData({ ...formData, amount: value })}
-        placeholder="Enter amount"
-        step="0.01"
-      />
-
-      <CategorySelector
-        value={formData.category}
-        onChange={(value) => setFormData({ ...formData, category: value })}
-      />
-
-      <FormField
-        id="notes"
-        label="Notes (Optional)"
-        value={formData.notes}
-        onChange={(value) => setFormData({ ...formData, notes: value })}
-        placeholder="Add any additional notes"
-        isTextarea
-      />
-
+      <BillReminderFormFields formData={formData} setFormData={setFormData} />
+      
       <WhatsAppToggle
         checked={formData.reminders_enabled}
         onChange={(checked) => setFormData({ ...formData, reminders_enabled: checked })}
