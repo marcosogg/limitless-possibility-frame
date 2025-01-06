@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import MonthYearPicker from "@/components/MonthYearPicker";
 
 const CreateBudget = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [date, setDate] = useState<Date>(new Date());
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [formData, setFormData] = useState({
     salary: "0",
     bonus: "0",
@@ -48,8 +49,8 @@ const CreateBudget = () => {
       }
 
       const { error } = await supabase.from("budgets").insert({
-        month: date.getMonth() + 1, // JavaScript months are 0-based
-        year: date.getFullYear(),
+        month: selectedMonth,
+        year: selectedYear,
         user_id: user.id,
         ...Object.fromEntries(
           Object.entries(formData).map(([key, value]) => [key, parseFloat(value) || 0])
@@ -82,12 +83,12 @@ const CreateBudget = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-4">
-            <Label>Select Month</Label>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(newDate) => newDate && setDate(newDate)}
-              className="rounded-md border"
+            <Label>Select Month and Year</Label>
+            <MonthYearPicker
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onMonthChange={setSelectedMonth}
+              onYearChange={setSelectedYear}
             />
           </div>
 
