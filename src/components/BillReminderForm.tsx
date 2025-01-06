@@ -11,7 +11,7 @@ export function BillReminderForm() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BillReminderFormData>(initialFormData);
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(['']);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,9 +34,12 @@ export function BillReminderForm() {
         throw new Error("Amount must be a positive number");
       }
 
-      if (formData.reminders_enabled && !phoneNumber) {
-        throw new Error("Phone number is required for SMS reminders");
+      if (formData.reminders_enabled && !phoneNumbers[0]) {
+        throw new Error("Main phone number is required for SMS reminders");
       }
+
+      // Filter out empty phone numbers
+      const validPhoneNumbers = phoneNumbers.filter(phone => phone.trim() !== '');
 
       // Check for existing bill reminders with the same provider name
       const { data: existingBills } = await supabase
@@ -55,62 +58,51 @@ export function BillReminderForm() {
         }
       }
 
-      const { error: insertError } = await supabase.from("bill_reminders").insert({
-        provider_name: formData.provider_name,
-        due_date: dueDate,
-        amount: amount,
-        category: formData.category,
-        notes: formData.notes || null,
-        reminders_enabled: formData.reminders_enabled,
-        phone_number: formData.reminders_enabled ? phoneNumber : null,
-        user_id: user.id
-      });
-
-      if (insertError) throw insertError;
-
-      if (formData.reminders_enabled) {
-        console.log('Calling send-sms function with data:', {
+      // Create bill reminder for each phone number
+      for (const phoneNumber of validPhoneNumbers) {
+        const { error: insertError } = await supabase.from("bill_reminders").insert({
           provider_name: formData.provider_name,
           due_date: dueDate,
           amount: amount,
-          phone_number: phoneNumber
+          category: formData.category,
+          notes: formData.notes || null,
+          reminders_enabled: formData.reminders_enabled,
+          phone_number: formData.reminders_enabled ? phoneNumber : null,
+          user_id: user.id
         });
 
-        const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms', {
-          body: {
-            reminder: {
-              provider_name: formData.provider_name,
-              due_date: dueDate,
-              amount: amount,
-              phone_number: phoneNumber
+        if (insertError) throw insertError;
+
+        if (formData.reminders_enabled) {
+          const { error: smsError } = await supabase.functions.invoke('send-sms', {
+            body: {
+              reminder: {
+                provider_name: formData.provider_name,
+                due_date: dueDate,
+                amount: amount,
+                phone_number: phoneNumber
+              }
             }
+          });
+
+          if (smsError) {
+            console.error('Failed to send SMS:', smsError);
+            toast({
+              variant: "destructive",
+              title: "Warning",
+              description: `Bill reminder created but SMS notification failed to send to ${phoneNumber}.`,
+            });
           }
-        });
-
-        console.log('SMS function response:', { data: smsData, error: smsError });
-
-        if (smsError) {
-          console.error('Failed to send SMS:', smsError);
-          toast({
-            variant: "destructive",
-            title: "Warning",
-            description: "Bill reminder created but SMS notification failed to send.",
-          });
-        } else {
-          toast({
-            title: "Success",
-            description: "Bill reminder created and SMS notification sent successfully.",
-          });
         }
-      } else {
-        toast({
-          title: "Success",
-          description: "Bill reminder created successfully",
-        });
       }
 
+      toast({
+        title: "Success",
+        description: "Bill reminder(s) created successfully",
+      });
+
       setFormData(initialFormData);
-      setPhoneNumber("");
+      setPhoneNumbers(['']);
     } catch (error: any) {
       console.error('Form submission error:', error);
       toast({
@@ -121,6 +113,12 @@ export function BillReminderForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhoneNumberChange = (value: string, index: number = 0) => {
+    const newPhoneNumbers = [...phoneNumbers];
+    newPhoneNumbers[index] = value;
+    setPhoneNumbers(newPhoneNumbers);
   };
 
   return (
@@ -174,8 +172,8 @@ export function BillReminderForm() {
       <WhatsAppToggle
         checked={formData.reminders_enabled}
         onChange={(checked) => setFormData({ ...formData, reminders_enabled: checked })}
-        phoneNumber={phoneNumber}
-        onPhoneNumberChange={setPhoneNumber}
+        phoneNumber={phoneNumbers[0]}
+        onPhoneNumberChange={handlePhoneNumberChange}
       />
 
       <Button type="submit" disabled={loading}>
