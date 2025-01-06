@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import BudgetSummary from "@/components/BudgetSummary";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
@@ -24,6 +26,7 @@ interface Budget {
 
 export default function Index() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [budget, setBudget] = useState<Budget | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
