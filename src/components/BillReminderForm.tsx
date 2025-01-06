@@ -1,36 +1,16 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-
-const categories = ["Electricity", "Internet", "Rent", "Credit Card", "Other"] as const;
-
-interface FormData {
-  provider_name: string;
-  due_date: string;
-  amount: string;
-  category: string;
-  notes: string;
-  reminders_enabled: boolean;
-}
-
-const initialFormData: FormData = {
-  provider_name: "",
-  due_date: "",
-  amount: "",
-  category: "",
-  notes: "",
-  reminders_enabled: false,
-};
+import { FormField } from "./bill-reminder/FormField";
+import { CategorySelector } from "./bill-reminder/CategorySelector";
+import { WhatsAppToggle } from "./bill-reminder/WhatsAppToggle";
+import { BillReminderFormData, initialFormData } from "@/types/bill-reminder";
 
 export function BillReminderForm() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<BillReminderFormData>(initialFormData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +45,6 @@ export function BillReminderForm() {
 
       if (error) throw error;
 
-      // Test the WhatsApp notification
       if (formData.reminders_enabled) {
         const { error: whatsappError } = await supabase.functions.invoke('send-whatsapp', {
           body: {
@@ -106,96 +85,56 @@ export function BillReminderForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="provider_name">Provider Name</Label>
-        <Input
-          id="provider_name"
-          required
-          value={formData.provider_name}
-          onChange={(e) =>
-            setFormData({ ...formData, provider_name: e.target.value })
-          }
-          placeholder="e.g., Electric Ireland"
-        />
-      </div>
+      <FormField
+        id="provider_name"
+        label="Provider Name"
+        required
+        value={formData.provider_name}
+        onChange={(value) => setFormData({ ...formData, provider_name: value })}
+        placeholder="e.g., Electric Ireland"
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="due_date">Due Date (Day of Month)</Label>
-        <Input
-          id="due_date"
-          type="number"
-          min="1"
-          max="31"
-          required
-          value={formData.due_date}
-          onChange={(e) =>
-            setFormData({ ...formData, due_date: e.target.value })
-          }
-          placeholder="Enter day (1-31)"
-        />
-      </div>
+      <FormField
+        id="due_date"
+        label="Due Date (Day of Month)"
+        type="number"
+        required
+        value={formData.due_date}
+        onChange={(value) => setFormData({ ...formData, due_date: value })}
+        placeholder="Enter day (1-31)"
+        min="1"
+        max="31"
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="amount">Amount (€)</Label>
-        <Input
-          id="amount"
-          type="number"
-          step="0.01"
-          required
-          value={formData.amount}
-          onChange={(e) =>
-            setFormData({ ...formData, amount: e.target.value })
-          }
-          placeholder="Enter amount"
-        />
-      </div>
+      <FormField
+        id="amount"
+        label="Amount (€)"
+        type="number"
+        required
+        value={formData.amount}
+        onChange={(value) => setFormData({ ...formData, amount: value })}
+        placeholder="Enter amount"
+        step="0.01"
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <Select
-          value={formData.category}
-          onValueChange={(value) =>
-            setFormData({ ...formData, category: value })
-          }
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <CategorySelector
+        value={formData.category}
+        onChange={(value) => setFormData({ ...formData, category: value })}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) =>
-            setFormData({ ...formData, notes: e.target.value })
-          }
-          placeholder="Add any additional notes"
-        />
-      </div>
+      <FormField
+        id="notes"
+        label="Notes (Optional)"
+        value={formData.notes}
+        onChange={(value) => setFormData({ ...formData, notes: value })}
+        placeholder="Add any additional notes"
+        isTextarea
+      />
 
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="reminders_enabled"
-          checked={formData.reminders_enabled}
-          onChange={(e) =>
-            setFormData({ ...formData, reminders_enabled: e.target.checked })
-          }
-          className="h-4 w-4 rounded border-gray-300"
-        />
-        <Label htmlFor="reminders_enabled">Enable WhatsApp Reminders</Label>
-      </div>
+      <WhatsAppToggle
+        checked={formData.reminders_enabled}
+        onChange={(checked) => setFormData({ ...formData, reminders_enabled: checked })}
+      />
 
       <Button type="submit" disabled={loading}>
         {loading ? "Creating..." : "Create Bill Reminder"}
