@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,12 @@ export default function BillReminders() {
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("You must be logged in to create bill reminders");
+      }
+
       const dueDate = parseInt(formData.due_date);
       if (isNaN(dueDate) || dueDate < 1 || dueDate > 31) {
         throw new Error("Due date must be between 1 and 31");
@@ -39,17 +45,16 @@ export default function BillReminders() {
         throw new Error("Amount must be a positive number");
       }
 
-      const { error } = await supabase.from("bill_reminders").insert([
-        {
-          provider_name: formData.provider_name,
-          due_date: dueDate,
-          amount: amount,
-          category: formData.category,
-          notes: formData.notes || null,
-          phone_number: formData.phone_number || null,
-          reminders_enabled: formData.reminders_enabled,
-        },
-      ]);
+      const { error } = await supabase.from("bill_reminders").insert({
+        provider_name: formData.provider_name,
+        due_date: dueDate,
+        amount: amount,
+        category: formData.category,
+        notes: formData.notes || null,
+        phone_number: formData.phone_number || null,
+        reminders_enabled: formData.reminders_enabled,
+        user_id: user.id
+      });
 
       if (error) throw error;
 
