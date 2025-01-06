@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,9 +35,22 @@ const CreateBudget = () => {
     e.preventDefault();
 
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a budget",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.from("budgets").insert({
         month: date.getMonth() + 1, // JavaScript months are 0-based
         year: date.getFullYear(),
+        user_id: user.id,
         ...Object.fromEntries(
           Object.entries(formData).map(([key, value]) => [key, parseFloat(value) || 0])
         ),
