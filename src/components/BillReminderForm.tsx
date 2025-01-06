@@ -6,12 +6,15 @@ import { WhatsAppToggle } from "./bill-reminder/WhatsAppToggle";
 import { BillReminderFormFields } from "./bill-reminder/BillReminderFormFields";
 import { BillReminderFormData, initialFormData } from "@/types/bill-reminder";
 
+const DEFAULT_PHONE = "+353838770548";
+
 export function BillReminderForm() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<BillReminderFormData>(initialFormData);
-  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(['']);
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>([DEFAULT_PHONE]);
   const [scheduleDate, setScheduleDate] = useState<Date>();
+  const [scheduleTime, setScheduleTime] = useState<string>("12:00");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +77,15 @@ export function BillReminderForm() {
         if (insertError) throw insertError;
 
         if (formData.reminders_enabled) {
+          let scheduledDateTime: string | undefined;
+          
+          if (scheduleDate) {
+            const date = new Date(scheduleDate);
+            const [hours, minutes] = scheduleTime.split(':');
+            date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            scheduledDateTime = date.toISOString();
+          }
+
           const { error: smsError } = await supabase.functions.invoke('send-sms', {
             body: {
               reminder: {
@@ -82,7 +94,7 @@ export function BillReminderForm() {
                 amount: amount,
                 phone_number: phoneNumber
               },
-              scheduleDate: scheduleDate?.toISOString()
+              scheduleDate: scheduledDateTime
             }
           });
 
@@ -105,8 +117,9 @@ export function BillReminderForm() {
       });
 
       setFormData(initialFormData);
-      setPhoneNumbers(['']);
+      setPhoneNumbers([DEFAULT_PHONE]);
       setScheduleDate(undefined);
+      setScheduleTime("12:00");
     } catch (error: any) {
       console.error('Form submission error:', error);
       toast({
@@ -136,6 +149,8 @@ export function BillReminderForm() {
         onPhoneNumberChange={handlePhoneNumberChange}
         scheduleDate={scheduleDate}
         onScheduleDateChange={setScheduleDate}
+        scheduleTime={scheduleTime}
+        onScheduleTimeChange={setScheduleTime}
       />
 
       <Button type="submit" disabled={loading}>

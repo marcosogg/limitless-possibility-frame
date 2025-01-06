@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, Calendar } from "lucide-react";
+import { Plus, Minus, Calendar, Clock } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -14,6 +14,8 @@ interface WhatsAppToggleProps {
   onPhoneNumberChange: (phoneNumber: string, index?: number) => void;
   scheduleDate: Date | undefined;
   onScheduleDateChange: (date: Date | undefined) => void;
+  scheduleTime: string;
+  onScheduleTimeChange: (time: string) => void;
 }
 
 export function WhatsAppToggle({ 
@@ -22,7 +24,9 @@ export function WhatsAppToggle({
   phoneNumber, 
   onPhoneNumberChange,
   scheduleDate,
-  onScheduleDateChange
+  onScheduleDateChange,
+  scheduleTime,
+  onScheduleTimeChange
 }: WhatsAppToggleProps) {
   const [additionalPhones, setAdditionalPhones] = useState<string[]>([]);
 
@@ -133,7 +137,7 @@ export function WhatsAppToggle({
             )}
 
             <div className="ml-6 space-y-2">
-              <Label className="text-sm text-gray-600">Schedule Reminder (Optional)</Label>
+              <Label className="text-sm text-gray-600">Schedule Reminder</Label>
               <div className="flex items-center space-x-2">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -142,7 +146,7 @@ export function WhatsAppToggle({
                       className={`w-[240px] justify-start text-left font-normal ${!scheduleDate && "text-muted-foreground"}`}
                     >
                       <Calendar className="mr-2 h-4 w-4" />
-                      {scheduleDate ? format(scheduleDate, "PPP") : "Schedule for later"}
+                      {scheduleDate ? format(scheduleDate, "PPP") : "Select date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -154,11 +158,27 @@ export function WhatsAppToggle({
                     />
                   </PopoverContent>
                 </Popover>
+
+                {scheduleDate && (
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-gray-500" />
+                    <Input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => onScheduleTimeChange(e.target.value)}
+                      className="w-32"
+                    />
+                  </div>
+                )}
+
                 {scheduleDate && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onScheduleDateChange(undefined)}
+                    onClick={() => {
+                      onScheduleDateChange(undefined);
+                      onScheduleTimeChange("12:00");
+                    }}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
