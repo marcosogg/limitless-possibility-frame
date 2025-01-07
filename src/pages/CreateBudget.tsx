@@ -56,6 +56,8 @@ const CreateBudget = () => {
           ...Object.fromEntries(
             Object.entries(budgetData).map(([key, value]) => [key, parseFloat(value) || 0])
           ),
+        }, {
+          onConflict: 'user_id,month,year'
         });
 
       if (error) throw error;
@@ -106,11 +108,17 @@ const CreateBudget = () => {
 
       await saveBudget(formData);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      // If the error is not a "no rows returned" error, show it
+      if (!error.message?.includes("No rows returned")) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        // If no existing budget was found, proceed with saving
+        await saveBudget(formData);
+      }
     }
   };
 
