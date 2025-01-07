@@ -4,7 +4,7 @@ export interface RevolutTransaction {
   startedDate: string;
   completedDate: string;
   description: string;
-  amount: string;
+  amount: number;  // Changed from string to number
   fee: string;
   currency: string;
   state: string;
