@@ -19,7 +19,7 @@ export function BudgetOverview({ monthlyIncome, plannedBudget, currentSpending }
             <DollarSign className="w-4 h-4" />
             <span className="font-medium">Monthly Income</span>
           </div>
-          <span className="text-2xl font-bold">${monthlyIncome.toFixed(2)}</span>
+          <span className="text-2xl font-bold">€{monthlyIncome.toFixed(2)}</span>
         </div>
 
         {/* Planned Budget Card */}
@@ -28,7 +28,7 @@ export function BudgetOverview({ monthlyIncome, plannedBudget, currentSpending }
             <PiggyBank className="w-4 h-4" />
             <span className="font-medium">Planned Budget</span>
           </div>
-          <span className="text-2xl font-bold">${plannedBudget.toFixed(2)}</span>
+          <span className="text-2xl font-bold">{plannedBudget.toFixed(2)}</span>
         </div>
 
         {/* Current Spending Card */}
