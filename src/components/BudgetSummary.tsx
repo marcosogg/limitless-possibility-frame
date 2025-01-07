@@ -1,5 +1,7 @@
+// src/components/BudgetSummary.tsx
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, Gift } from "lucide-react";
+import { formatCurrency } from "@/lib/utils"; // Import the formatCurrency function
 
 interface BudgetSummaryProps {
   totalIncome: number;
@@ -8,15 +10,6 @@ interface BudgetSummaryProps {
 }
 
 const BudgetSummary = ({ totalIncome, salary, bonus }: BudgetSummaryProps) => {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  };
-
   return (
     <Card className="bg-white shadow-sm">
       <CardContent className="p-6">
