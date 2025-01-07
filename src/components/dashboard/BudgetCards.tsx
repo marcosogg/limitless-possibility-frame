@@ -174,7 +174,7 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
             })}
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Remaining to Spend</span>
+                <span className="font-semibold">Remaining</span>
                 <span className={`font-semibold ${(budget.salary + budget.bonus - calculateTotalSpent()) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(budget.salary + budget.bonus - calculateTotalSpent())}
                 </span>
