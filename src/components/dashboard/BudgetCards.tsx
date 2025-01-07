@@ -1,13 +1,11 @@
-// src/components/dashboard/BudgetCards.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Home, Zap, ShoppingCart, Car, Tv, ShoppingBag, MoreHorizontal, PiggyBank, AlertCircle } from "lucide-react";
+import { Home, Zap, ShoppingCart, Car, Tv, ShoppingBag, MoreHorizontal, PiggyBank } from "lucide-react";
 import type { Budget } from "@/types/budget";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 interface BudgetCardsProps {
@@ -101,9 +99,6 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
     }
   };
 
-  const overspentCategories = CATEGORIES.filter(cat => budget[cat.spentKey as keyof Budget] > budget[cat.plannedKey as keyof Budget]);
-  const isOverBudget = overspentCategories.length > 0;
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Planned Budget Card */}
@@ -190,17 +185,26 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
                   {/* Progress Bar and Numeric Display */}
                   {!isEditing && (
                     <>
-                      <Progress
-                        value={percentage}
-                        className={cn("w-full h-2", isOverspent && "bg-red-500")}
-                        style={{ backgroundColor: '#e2e8f0' }}
-                      />
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            isOverspent ? "bg-red-500" : "bg-purple-500"
+                          )}
+                          style={{
+                            width: `${Math.min(percentage, 100)}%`,
+                          }}
+                        />
+                      </div>
                       <div className="flex justify-between text-xs text-gray-500">
                         <span>
                           {formatCurrency(spent)} / {formatCurrency(planned)}
                         </span>
-                        <span className={`font-medium ${isOverspent ? "text-red-600" : "text-green-600"}`}>
-                          ({isOverspent ? "+" : ""}{formatCurrency(remaining)})
+                        <span className={cn(
+                          "font-medium",
+                          isOverspent ? "text-red-600" : "text-green-600"
+                        )}>
+                          ({isOverspent ? "+" : ""}{formatCurrency(Math.abs(remaining))})
                         </span>
                       </div>
                     </>
@@ -218,19 +222,6 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
           </div>
         </CardContent>
       </Card>
-      {/* Overspending Indicator (Moved outside the main grid) */}
-      {isOverBudget && (
-        <div className="col-span-full">
-          <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm">
-            <CardContent className="p-4 flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              <p className="font-semibold text-sm">
-                You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

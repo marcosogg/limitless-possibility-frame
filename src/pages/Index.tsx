@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import MonthYearPicker from "@/components/MonthYearPicker";
-import BudgetSummary from "@/components/BudgetSummary";
+import { BudgetOverview } from "@/components/dashboard/BudgetOverview"; // Import the new component
 import { BillRemindersCard } from "@/components/BillRemindersCard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BudgetCards } from "@/components/dashboard/BudgetCards";
@@ -23,7 +23,7 @@ export default function Index() {
   const fetchBudget = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast({
           title: "Error",
@@ -70,6 +70,11 @@ export default function Index() {
     setBudget(updatedBudget);
   };
 
+  const overspentCategories = budget
+    ? CATEGORIES.filter(cat => budget[cat.spentKey as keyof Budget] > budget[cat.plannedKey as keyof Budget])
+    : [];
+  const isOverBudget = overspentCategories.length > 0;
+
   return (
     <div className="min-h-screen gradient-bg p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -88,12 +93,23 @@ export default function Index() {
           </div>
         ) : budget ? (
           <div className="space-y-6">
-            <BudgetSummary
-              totalIncome={budget.salary + budget.bonus}
-              salary={budget.salary}
-              bonus={budget.bonus}
+            <BudgetOverview
+              monthlyIncome={budget.salary + budget.bonus}
+              plannedBudget={calculateTotalPlanned()}
+              currentSpending={calculateTotalSpent()}
             />
-            <BudgetCards 
+            {/* Overspending Indicator */}
+            {isOverBudget && (
+              <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm">
+                <CardContent className="p-4 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2" />
+                  <p className="font-semibold text-sm">
+                    You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            <BudgetCards
               budget={budget}
               formatCurrency={formatCurrency}
               onUpdateSpent={handleUpdateSpent}
@@ -104,7 +120,7 @@ export default function Index() {
           <Card className="bg-white/10 backdrop-blur-lg text-white">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-lg mb-4">No budget found for this month</p>
-              <Button 
+              <Button
                 onClick={() => navigate("/createbudget")}
                 className="bg-white text-indigo-600 hover:bg-gray-100"
               >
