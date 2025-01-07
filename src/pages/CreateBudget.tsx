@@ -20,9 +20,9 @@ export default function CreateBudget() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [formData, setFormData] = useState({
-    salary: "",
+    salary: "2700", // Default salary
     bonus: "",
-    rent: "",
+    rent: "1000", // Default rent
     utilities: "",
     groceries: "",
     transport: "",
@@ -65,11 +65,11 @@ export default function CreateBudget() {
             savings: budget.savings.toString(),
           });
         } else {
-          // Reset form if no budget exists
+          // Reset form to defaults if no budget exists
           setFormData({
-            salary: "",
+            salary: "2700", // Default salary
             bonus: "",
-            rent: "",
+            rent: "1000", // Default rent
             utilities: "",
             groceries: "",
             transport: "",
