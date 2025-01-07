@@ -22,40 +22,53 @@ export default function RevolutImport() {
   try {
     const text = await file.text();
     
-    // Debug: Log the raw text
-    console.log("Raw file content:", text);
+    // Debug: Log the first few lines
+    console.log("First few lines:", text.split('\n').slice(0, 3));
     
     const rows = text.split('\n');
-    
-    // Debug: Log the first row (header)
-    console.log("First row:", rows[0]);
-    
-    // Debug: Log how the first row splits by tab
-    console.log("First row split by tab:", rows[0].split('\t'));
-    
-    // Debug: Log the number of rows
-    console.log("Number of rows:", rows.length);
-    
-    // If we have at least one data row, let's look at it
-    if (rows.length > 1) {
-      console.log("First data row:", rows[1]);
-      console.log("First data row split by tab:", rows[1].split('\t'));
+    const header = rows[0].split(','); // Changed from tab to comma
+    const expectedColumns = 10;
+
+    if (header.length !== expectedColumns) {
+      throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
     }
 
-    // Stop here for now
-    throw new Error("Debug stop");
+    const parsedTransactions = rows
+      .slice(1)
+      .filter(row => row.trim())
+      .map(row => {
+        const values = row.split(','); // Changed from tab to comma
+        return {
+          type: values[0],
+          product: values[1],
+          startedDate: values[2],
+          completedDate: values[3],
+          description: values[4],
+          amount: values[5],
+          fee: values[6],
+          currency: values[7],
+          state: values[8],
+          balance: values[9]
+        };
+      });
+
+    setTransactions(parsedTransactions);
+    
+    // Log success
+    console.log("Successfully parsed transactions:", parsedTransactions.length);
 
   } catch (error) {
     console.error('Error processing file:', error);
     toast({
       title: "Error",
-      description: error.message,
+      description: error.message || "Failed to process the file",
       variant: "destructive",
     });
   } finally {
     setIsProcessing(false);
   }
 };
+
 
 
 
