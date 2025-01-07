@@ -12,7 +12,6 @@ export type Database = {
       bill_reminders: {
         Row: {
           amount: number
-          category: string
           created_at: string | null
           currency: string
           due_date: number
@@ -25,7 +24,6 @@ export type Database = {
         }
         Insert: {
           amount?: number
-          category: string
           created_at?: string | null
           currency?: string
           due_date: number
@@ -38,7 +36,6 @@ export type Database = {
         }
         Update: {
           amount?: number
-          category?: string
           created_at?: string | null
           currency?: string
           due_date?: number

@@ -5,7 +5,6 @@ export interface BillReminder {
   due_date: number;
   amount: number;
   currency: string;
-  category: string;
   notes: string | null;
   phone_number: string | null;
   reminders_enabled: boolean;
@@ -16,7 +15,6 @@ export interface BillReminderFormData {
   provider_name: string;
   due_date: string;
   amount: string;
-  category: string;
   notes: string;
   reminders_enabled: boolean;
 }
@@ -25,7 +23,6 @@ export const initialFormData: BillReminderFormData = {
   provider_name: "",
   due_date: "",
   amount: "",
-  category: "utilities", // Changed to use a valid category
   notes: "",
   reminders_enabled: false,
 };

@@ -30,7 +30,6 @@ interface BillReminder {
   provider_name: string;
   due_date: number;
   amount: number;
-  category: string;
   notes: string | null;
   reminders_enabled: boolean;
   phone_number: string | null;
@@ -48,7 +47,7 @@ export function BillRemindersCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('bill_reminders')
-        .select('id, provider_name, due_date, amount, category, notes, reminders_enabled, phone_number')
+        .select('id, provider_name, due_date, amount, notes, reminders_enabled, phone_number')
         .order('due_date', { ascending: true });
 
       if (error) throw error;

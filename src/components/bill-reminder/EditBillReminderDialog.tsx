@@ -20,7 +20,6 @@ interface EditBillReminderDialogProps {
     provider_name: string;
     due_date: number;
     amount: number;
-    category: string;
     notes: string | null;
     reminders_enabled: boolean;
     phone_number: string | null;
@@ -40,7 +39,6 @@ export function EditBillReminderDialog({
     provider_name: reminder.provider_name,
     due_date: reminder.due_date.toString(),
     amount: reminder.amount.toString(),
-    category: reminder.category,
     notes: reminder.notes || "",
     reminders_enabled: reminder.reminders_enabled,
   });
@@ -81,7 +79,6 @@ export function EditBillReminderDialog({
           provider_name: formData.provider_name,
           due_date: dueDate,
           amount: amount,
-          category: formData.category,
           notes: formData.notes || null,
           reminders_enabled: formData.reminders_enabled,
           phone_number: formData.reminders_enabled ? phoneNumbers[0] : null,

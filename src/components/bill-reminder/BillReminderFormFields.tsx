@@ -1,5 +1,4 @@
 import { FormField } from "./FormField";
-import { CategorySelector } from "./CategorySelector";
 import { BillReminderFormData } from "@/types/bill-reminder";
 
 interface BillReminderFormFieldsProps {
@@ -40,11 +39,6 @@ export function BillReminderFormFields({ formData, setFormData }: BillReminderFo
         onChange={(value) => setFormData({ ...formData, amount: value })}
         placeholder="Enter amount"
         step="0.01"
-      />
-
-      <CategorySelector
-        value={formData.category}
-        onChange={(value) => setFormData({ ...formData, category: value })}
       />
 
       <FormField
