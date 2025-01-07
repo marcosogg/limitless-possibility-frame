@@ -1,42 +1,73 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import FileUploadZone from "@/components/revolut/FileUploadZone";
-import TransactionsTable from "@/components/revolut/TransactionsTable";
-import type { RevolutTransaction } from "@/types/revolut";
-import { supabase } from "@/integrations/supabase/client";
-import { parse } from "date-fns";
+import { Upload } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface RevolutTransaction {
+  type: string;
+  product: string;
+  startedDate: string;
+  completedDate: string;
+  description: string;
+  amount: string;
+  fee: string;
+  currency: string;
+  state: string;
+  balance: string;
+}
 
 export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const [dragActive, setDragActive] = useState(false);
   const [transactions, setTransactions] = useState<RevolutTransaction[]>([]);
 
-  const parseDate = (dateStr: string) => {
-    try {
-      const parsedDate = parse(dateStr, "dd/MM/yyyy HH:mm", new Date());
-      if (isNaN(parsedDate.getTime())) {
-        throw new Error("Invalid date");
-      }
-      return parsedDate.toISOString();
-    } catch (error) {
-      console.error("Error parsing date:", dateStr, error);
-      throw new Error(`Invalid date format: ${dateStr}`);
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
   };
 
-  const parseAmount = (amountStr: string, rowIndex: number) => {
-    if (!amountStr || typeof amountStr !== 'string') {
-      throw new Error(`Invalid amount at line ${rowIndex}: ${amountStr}`);
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const files = e.dataTransfer.files;
+    if (files?.[0]?.type === "text/csv") {
+      await processFile(files[0]);
+    } else {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a CSV file",
+        variant: "destructive",
+      });
     }
-    // Remove any currency symbols and whitespace, keep negative signs and decimals
-    const cleanedAmount = amountStr.trim().replace(/[^\d.-]/g, '');
-    const parsedAmount = parseFloat(cleanedAmount);
-    
-    if (isNaN(parsedAmount)) {
-      throw new Error(`Invalid amount format at line ${rowIndex}: ${amountStr}`);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file?.type === "text/csv") {
+      await processFile(file);
+    } else {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a CSV file",
+        variant: "destructive",
+      });
     }
-    
-    return parsedAmount;
   };
 
   const processFile = async (file: File) => {
@@ -45,67 +76,25 @@ export default function RevolutImport() {
       const text = await file.text();
       const rows = text.split('\n');
       
-      if (rows.length < 2) {
-        throw new Error("CSV file appears to be empty or missing data rows");
-      }
-
-      const header = rows[0].split('\t');
-      const expectedColumns = 10;
-
-      if (header.length !== expectedColumns) {
-        throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
-      }
-
+      // Remove header row and parse remaining rows
+      const header = rows[0].split(',');
       const parsedTransactions = rows.slice(1)
-        .filter(row => row.trim())
-        .map((row, index) => {
-          const values = row.split('\t');
-          
-          if (values.length !== expectedColumns) {
-            console.error(`Row ${index + 2} has incorrect number of columns:`, values);
-            throw new Error(`Invalid row format at line ${index + 2}: Expected ${expectedColumns} columns but found ${values.length}`);
-          }
-
-          if (!values[2] || !values[3] || !values[4] || !values[5] || !values[7]) {
-            throw new Error(`Missing required fields at line ${index + 2}`);
-          }
-
-          // Parse amount early to validate it
-          const amount = parseAmount(values[5], index + 2);
-
+        .filter(row => row.trim()) // Skip empty rows
+        .map(row => {
+          const values = row.split(',');
           return {
             type: values[0] || '',
             product: values[1] || '',
-            startedDate: parseDate(values[2]),
-            completedDate: parseDate(values[3]),
+            startedDate: values[2] || '',
+            completedDate: values[3] || '',
             description: values[4] || '',
-            amount: amount.toString(), // Store as string in the transaction object
+            amount: values[5] || '',
             fee: values[6] || '',
             currency: values[7] || '',
             state: values[8] || '',
             balance: values[9] || '',
           };
         });
-
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        throw new Error("User not authenticated");
-      }
-
-      const { error } = await supabase.from('revolut_transactions').insert(
-        parsedTransactions.map(t => ({
-          date: t.completedDate,
-          description: t.description,
-          amount: parseFloat(t.amount), // Already validated, safe to parse
-          currency: t.currency,
-          profile_id: user.user.id
-        }))
-      );
-
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
 
       setTransactions(parsedTransactions);
       
@@ -117,7 +106,7 @@ export default function RevolutImport() {
       console.error('Error processing file:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to process the file",
+        description: "Failed to process the file",
         variant: "destructive",
       });
     } finally {
@@ -128,8 +117,86 @@ export default function RevolutImport() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Import Revolut Statement</h1>
-      <FileUploadZone isProcessing={isProcessing} onFileUpload={processFile} />
-      {transactions.length > 0 && <TransactionsTable transactions={transactions} />}
+      
+      <div
+        className={`border-2 border-dashed rounded-lg p-8 text-center ${
+          dragActive ? "border-primary bg-primary/5" : "border-gray-300"
+        } transition-colors mb-8`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <Upload className="h-12 w-12 text-gray-400" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-lg">
+              Drag and drop your Revolut statement here, or
+            </p>
+            <div>
+              <label htmlFor="file-upload">
+                <Button
+                  disabled={isProcessing}
+                  onClick={() => document.getElementById("file-upload")?.click()}
+                >
+                  {isProcessing ? "Processing..." : "Upload Revolut Statement"}
+                </Button>
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                className="hidden"
+                accept=".csv"
+                onChange={handleFileChange}
+                disabled={isProcessing}
+              />
+            </div>
+            <p className="text-sm text-gray-500">Only CSV files are supported</p>
+          </div>
+        </div>
+      </div>
+
+      {transactions.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Imported Transactions</h2>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Started Date</TableHead>
+                  <TableHead>Completed Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Fee</TableHead>
+                  <TableHead>Currency</TableHead>
+                  <TableHead>State</TableHead>
+                  <TableHead>Balance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.map((transaction, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{transaction.type}</TableCell>
+                    <TableCell>{transaction.product}</TableCell>
+                    <TableCell>{transaction.startedDate}</TableCell>
+                    <TableCell>{transaction.completedDate}</TableCell>
+                    <TableCell>{transaction.description}</TableCell>
+                    <TableCell>{transaction.amount}</TableCell>
+                    <TableCell>{transaction.fee}</TableCell>
+                    <TableCell>{transaction.currency}</TableCell>
+                    <TableCell>{transaction.state}</TableCell>
+                    <TableCell>{transaction.balance}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
