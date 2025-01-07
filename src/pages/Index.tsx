@@ -1,3 +1,4 @@
+// src/pages/Index.tsx
 import { useState, useEffect } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,6 +72,10 @@ export default function Index() {
     return CATEGORIES.reduce((acc, cat) => acc + budget[cat.spentKey as keyof Budget], 0);
   };
 
+  const handleUpdateSpent = (updatedBudget: Budget) => {
+    setBudget(updatedBudget);
+  };
+
   const overspentCategories = budget
     ? CATEGORIES.filter(cat => budget[cat.spentKey as keyof Budget] > budget[cat.plannedKey as keyof Budget])
     : [];
@@ -112,7 +117,8 @@ export default function Index() {
             )}
             <BudgetCards
               budget={budget}
-              onUpdateSpent={handleUpdateSpent}
+              formatCurrency={formatCurrency}
+              onUpdateSpent={handleUpdateSpent} // Pass the function here
             />
             <BillRemindersCard />
           </div>
