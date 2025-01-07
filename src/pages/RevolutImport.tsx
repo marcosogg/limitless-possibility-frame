@@ -24,6 +24,21 @@ export default function RevolutImport() {
     }
   };
 
+  const parseAmount = (amountStr: string, rowIndex: number) => {
+    if (!amountStr || typeof amountStr !== 'string') {
+      throw new Error(`Invalid amount at line ${rowIndex}: ${amountStr}`);
+    }
+    // Remove any currency symbols and whitespace, keep negative signs and decimals
+    const cleanedAmount = amountStr.trim().replace(/[^\d.-]/g, '');
+    const parsedAmount = parseFloat(cleanedAmount);
+    
+    if (isNaN(parsedAmount)) {
+      throw new Error(`Invalid amount format at line ${rowIndex}: ${amountStr}`);
+    }
+    
+    return parsedAmount;
+  };
+
   const processFile = async (file: File) => {
     setIsProcessing(true);
     try {
@@ -34,43 +49,37 @@ export default function RevolutImport() {
         throw new Error("CSV file appears to be empty or missing data rows");
       }
 
-      // Remove header row and parse remaining rows
       const header = rows[0].split('\t');
-      const expectedColumns = 10; // Type, Product, Started Date, etc.
+      const expectedColumns = 10;
 
       if (header.length !== expectedColumns) {
         throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
       }
 
       const parsedTransactions = rows.slice(1)
-        .filter(row => row.trim()) // Skip empty rows
+        .filter(row => row.trim())
         .map((row, index) => {
           const values = row.split('\t');
           
-          // Validate row has correct number of columns
           if (values.length !== expectedColumns) {
             console.error(`Row ${index + 2} has incorrect number of columns:`, values);
             throw new Error(`Invalid row format at line ${index + 2}: Expected ${expectedColumns} columns but found ${values.length}`);
           }
 
-          // Validate required fields are present
           if (!values[2] || !values[3] || !values[4] || !values[5] || !values[7]) {
             throw new Error(`Missing required fields at line ${index + 2}`);
           }
 
-          // Parse amount with validation
-          const amountStr = values[5].trim();
-          if (!amountStr) {
-            throw new Error(`Empty amount at line ${index + 2}`);
-          }
-          
+          // Parse amount early to validate it
+          const amount = parseAmount(values[5], index + 2);
+
           return {
             type: values[0] || '',
             product: values[1] || '',
             startedDate: parseDate(values[2]),
             completedDate: parseDate(values[3]),
             description: values[4] || '',
-            amount: amountStr,
+            amount: amount.toString(), // Store as string in the transaction object
             fee: values[6] || '',
             currency: values[7] || '',
             state: values[8] || '',
@@ -78,7 +87,6 @@ export default function RevolutImport() {
           };
         });
 
-      // Store transactions in Supabase
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
         throw new Error("User not authenticated");
@@ -88,7 +96,7 @@ export default function RevolutImport() {
         parsedTransactions.map(t => ({
           date: t.completedDate,
           description: t.description,
-          amount: parseFloat(t.amount.replace(/[^\d.-]/g, '')),
+          amount: parseFloat(t.amount), // Already validated, safe to parse
           currency: t.currency,
           profile_id: user.user.id
         }))
