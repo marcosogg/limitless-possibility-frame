@@ -129,6 +129,42 @@ export type Database = {
         }
         Relationships: []
       }
+      revolut_transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string | null
+          currency: string
+          date: string
+          description: string
+          id: string
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          currency: string
+          date: string
+          description: string
+          id?: string
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          currency?: string
+          date?: string
+          description?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
