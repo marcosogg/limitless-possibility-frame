@@ -6,12 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import MonthYearPicker from "@/components/MonthYearPicker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const CreateBudget = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
+  const [pendingBudgetData, setPendingBudgetData] = useState<any>(null);
   const [formData, setFormData] = useState({
     salary: "0",
     bonus: "0",
@@ -27,16 +39,12 @@ const CreateBudget = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Only allow numbers and decimal points
     if (!/^\d*\.?\d*$/.test(value)) return;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const saveBudget = async (budgetData: any) => {
     try {
-      // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -48,38 +56,22 @@ const CreateBudget = () => {
         return;
       }
 
-      // Check if a budget already exists for this month and year
-      const { data: existingBudget } = await supabase
+      const { error } = await supabase
         .from("budgets")
-        .select()
-        .eq('user_id', user.id)
-        .eq('month', selectedMonth)
-        .eq('year', selectedYear)
-        .single();
-
-      if (existingBudget) {
-        toast({
-          title: "Error",
-          description: `A budget for ${new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} ${selectedYear} already exists.`,
-          variant: "destructive",
+        .upsert({
+          month: selectedMonth,
+          year: selectedYear,
+          user_id: user.id,
+          ...Object.fromEntries(
+            Object.entries(budgetData).map(([key, value]) => [key, parseFloat(value) || 0])
+          ),
         });
-        return;
-      }
-
-      const { error } = await supabase.from("budgets").insert({
-        month: selectedMonth,
-        year: selectedYear,
-        user_id: user.id,
-        ...Object.fromEntries(
-          Object.entries(formData).map(([key, value]) => [key, parseFloat(value) || 0])
-        ),
-      });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Budget created successfully!",
+        description: "Budget saved successfully!",
       });
       navigate("/");
     } catch (error: any) {
@@ -89,6 +81,53 @@ const CreateBudget = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a budget",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if a budget already exists
+      const { data: existingBudget } = await supabase
+        .from("budgets")
+        .select()
+        .eq('user_id', user.id)
+        .eq('month', selectedMonth)
+        .eq('year', selectedYear)
+        .single();
+
+      if (existingBudget) {
+        setPendingBudgetData(formData);
+        setShowOverwriteDialog(true);
+        return;
+      }
+
+      await saveBudget(formData);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOverwriteConfirm = async () => {
+    if (pendingBudgetData) {
+      await saveBudget(pendingBudgetData);
+    }
+    setShowOverwriteDialog(false);
   };
 
   return (
@@ -174,9 +213,25 @@ const CreateBudget = () => {
             <Button variant="outline" type="button" onClick={() => navigate("/")}>
               Cancel
             </Button>
-            <Button type="submit">Create Budget</Button>
+            <Button type="submit">Save Budget</Button>
           </div>
         </form>
+
+        <AlertDialog open={showOverwriteDialog} onOpenChange={setShowOverwriteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Overwrite Existing Budget?</AlertDialogTitle>
+              <AlertDialogDescription>
+                A budget for {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear} already exists. 
+                Are you sure you want to overwrite it?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowOverwriteDialog(false)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleOverwriteConfirm}>Overwrite</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
