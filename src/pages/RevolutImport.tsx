@@ -30,21 +30,47 @@ export default function RevolutImport() {
       const text = await file.text();
       const rows = text.split('\n');
       
+      if (rows.length < 2) {
+        throw new Error("CSV file appears to be empty or missing data rows");
+      }
+
       // Remove header row and parse remaining rows
-      const header = rows[0].split('\t'); // Changed to tab delimiter
+      const header = rows[0].split('\t');
+      const expectedColumns = 10; // Type, Product, Started Date, etc.
+
+      if (header.length !== expectedColumns) {
+        throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
+      }
+
       const parsedTransactions = rows.slice(1)
         .filter(row => row.trim()) // Skip empty rows
-        .map(row => {
-          const values = row.split('\t'); // Changed to tab delimiter
-          const amount = parseFloat(values[5].replace(/[^\d.-]/g, '')); // Handle negative numbers
+        .map((row, index) => {
+          const values = row.split('\t');
+          
+          // Validate row has correct number of columns
+          if (values.length !== expectedColumns) {
+            console.error(`Row ${index + 2} has incorrect number of columns:`, values);
+            throw new Error(`Invalid row format at line ${index + 2}: Expected ${expectedColumns} columns but found ${values.length}`);
+          }
 
+          // Validate required fields are present
+          if (!values[2] || !values[3] || !values[4] || !values[5] || !values[7]) {
+            throw new Error(`Missing required fields at line ${index + 2}`);
+          }
+
+          // Parse amount with validation
+          const amountStr = values[5].trim();
+          if (!amountStr) {
+            throw new Error(`Empty amount at line ${index + 2}`);
+          }
+          
           return {
             type: values[0] || '',
             product: values[1] || '',
             startedDate: parseDate(values[2]),
             completedDate: parseDate(values[3]),
             description: values[4] || '',
-            amount: values[5] || '',
+            amount: amountStr,
             fee: values[6] || '',
             currency: values[7] || '',
             state: values[8] || '',
@@ -62,7 +88,7 @@ export default function RevolutImport() {
         parsedTransactions.map(t => ({
           date: t.completedDate,
           description: t.description,
-          amount: parseFloat(t.amount),
+          amount: parseFloat(t.amount.replace(/[^\d.-]/g, '')),
           currency: t.currency,
           profile_id: user.user.id
         }))
