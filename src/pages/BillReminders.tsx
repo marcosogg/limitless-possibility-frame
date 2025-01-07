@@ -26,9 +26,32 @@ export default function BillReminders() {
           due_date: parseInt(billReminderData.dueDate),
           amount: parseFloat(billReminderData.amount),
           reminders_enabled: billReminderData.smsReminders,
+          phone_number: billReminderData.smsReminders ? "+353838770548" : null,
         } as BillReminderInsert);
 
       if (error) throw error;
+
+      if (billReminderData.smsReminders) {
+        const { error: smsError } = await supabase.functions.invoke('send-sms', {
+          body: {
+            reminder: {
+              provider_name: billReminderData.providerName,
+              due_date: parseInt(billReminderData.dueDate),
+              amount: parseFloat(billReminderData.amount),
+              phone_number: "+353838770548" // Hardcoded for now
+            }
+          }
+        });
+
+        if (smsError) {
+          console.error('Failed to send SMS:', smsError);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: `Bill reminder created but SMS notification failed to send.`,
+          });
+        }
+      }
 
       toast({
         title: "Success",
