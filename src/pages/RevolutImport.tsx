@@ -32,31 +32,26 @@ export default function RevolutImport() {
     const parsedTransactions = rows
       .slice(1)
       .filter(row => row.trim())
-      .map((row, index) => {
-        const values = row.split(',');
-        
-        // Debug: Log the date string we're trying to parse
-        console.log(`Row ${index + 1} completed date:`, values[3]);
-        
+      .map(row => row.split(','))
+      // Filter out non-COMPLETED transactions first
+      .filter(values => values[8].trim() === 'COMPLETED')
+      .map((values, index) => {
         try {
-          // Parse the date using the correct format
+          // Parse the date
           const parsedDate = parse(
             values[3].trim(),
             'yyyy-MM-dd HH:mm:ss',
             new Date()
           );
 
-          // Verify the parsed date is valid
-          if (isNaN(parsedDate.getTime())) {
-            console.error(`Invalid date at row ${index + 1}:`, values[3]);
-            return null;
-          }
+          // Parse amount
+          const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
 
           return {
             type: values[0],
             product: values[1],
             startedDate: values[2],
-            completedDate: parsedDate.toISOString(), // Convert to ISO string
+            completedDate: parsedDate.toISOString(),
             description: values[4],
             amount: values[5],
             fee: values[6],
@@ -65,14 +60,43 @@ export default function RevolutImport() {
             balance: values[9]
           };
         } catch (error) {
-          console.error(`Error parsing date at row ${index + 1}:`, error);
+          console.error(`Error parsing row ${index + 1}:`, error);
           return null;
         }
       })
       .filter((transaction): transaction is RevolutTransaction => transaction !== null);
 
     setTransactions(parsedTransactions);
-    console.log("Successfully parsed transactions:", parsedTransactions.length);
+    
+    // Get user ID for database insertion
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Failed to get user ID');
+    }
+
+    // Prepare transactions for database insertion
+    const dbTransactions = parsedTransactions.map(t => ({
+      date: t.completedDate,
+      description: t.description,
+      amount: parseFloat(t.amount.replace(/[^\d.-]/g, '')),
+      currency: t.currency,
+      category: null,
+      profile_id: user.id
+    }));
+
+    // Insert into database
+    const { error: insertError } = await supabase
+      .from('revolut_transactions')
+      .insert(dbTransactions);
+
+    if (insertError) {
+      throw insertError;
+    }
+
+    toast({
+      title: "Success",
+      description: `Successfully imported ${parsedTransactions.length} completed transactions`
+    });
 
   } catch (error) {
     console.error('Error processing file:', error);
