@@ -4,7 +4,6 @@ import FileUploadZone from "@/components/revolut/FileUploadZone";
 import TransactionsTable from "@/components/revolut/TransactionsTable";
 import type { RevolutTransaction } from "@/types/revolut";
 import { supabase } from "@/integrations/supabase/client";
-import { parse, format } from "date-fns";
 
 export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -23,38 +22,17 @@ export default function RevolutImport() {
         .filter(row => row.trim()) // Skip empty rows
         .map(row => {
           const values = row.split(',');
-          
-          // Parse the completed date string into a Date object
-          // Format: "31/12/2023 16:08"
-          const completedDateStr = values[3].trim().replace(/"/g, '');
-          let parsedDate;
-          
-          try {
-            parsedDate = parse(completedDateStr, 'dd/MM/yyyy HH:mm', new Date());
-            if (isNaN(parsedDate.getTime())) {
-              console.error('Failed to parse date:', completedDateStr);
-              parsedDate = new Date(); // Fallback to current date if parsing fails
-            }
-          } catch (error) {
-            console.error('Error parsing date:', completedDateStr, error);
-            parsedDate = new Date(); // Fallback to current date
-          }
-
-          // Format amount: remove currency symbol and convert to number
-          const rawAmount = values[5].trim().replace(/[^-0-9.]/g, '');
-          const amount = parseFloat(rawAmount) || 0;
-
           return {
-            type: values[0]?.trim() || '',
-            product: values[1]?.trim() || '',
-            startedDate: values[2]?.trim() || '',
-            completedDate: values[3]?.trim() || '',
-            description: values[4]?.trim() || '',
-            amount: amount,
-            fee: values[6]?.trim() || '',
-            currency: values[7]?.trim() || '',
-            state: values[8]?.trim() || '',
-            balance: values[9]?.trim() || '',
+            type: values[0] || '',
+            product: values[1] || '',
+            startedDate: values[2] || '',
+            completedDate: values[3] || '',
+            description: values[4] || '',
+            amount: values[5] || '',
+            fee: values[6] || '',
+            currency: values[7] || '',
+            state: values[8] || '',
+            balance: values[9] || '',
           };
         });
 
@@ -66,12 +44,9 @@ export default function RevolutImport() {
 
       const { error } = await supabase.from('revolut_transactions').insert(
         parsedTransactions.map(t => ({
-          date: format(
-            parse(t.completedDate, 'dd/MM/yyyy HH:mm', new Date()),
-            'yyyy-MM-dd'
-          ),
+          date: new Date(t.completedDate).toISOString(),
           description: t.description,
-          amount: t.amount,
+          amount: parseFloat(t.amount),
           currency: t.currency,
           profile_id: user.user.id
         }))
@@ -91,7 +66,7 @@ export default function RevolutImport() {
       console.error('Error processing file:', error);
       toast({
         title: "Error",
-        description: "Failed to process the file. Please check the format of your CSV.",
+        description: "Failed to process the file",
         variant: "destructive",
       });
     } finally {
