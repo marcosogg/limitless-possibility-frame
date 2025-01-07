@@ -7,7 +7,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const categories = ["Electricity", "Internet", "Rent", "Credit Card", "Other"] as const;
+// These categories must match exactly what's allowed in the database
+const categories = [
+  "utilities",
+  "rent",
+  "internet",
+  "phone",
+  "insurance",
+  "other"
+] as const;
 
 interface CategorySelectorProps {
   value: string;
@@ -25,7 +33,7 @@ export function CategorySelector({ value, onChange }: CategorySelectorProps) {
         <SelectContent>
           {categories.map((category) => (
             <SelectItem key={category} value={category}>
-              {category}
+              {category.charAt(0).toUpperCase() + category.slice(1)}
             </SelectItem>
           ))}
         </SelectContent>

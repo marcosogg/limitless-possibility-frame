@@ -25,7 +25,7 @@ export const initialFormData: BillReminderFormData = {
   provider_name: "",
   due_date: "",
   amount: "",
-  category: "utilities",
+  category: "utilities", // Changed to use a valid category
   notes: "",
   reminders_enabled: false,
 };
