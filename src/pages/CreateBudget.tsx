@@ -14,6 +14,30 @@ export default function CreateBudget() {
   const navigate = useNavigate();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingBudgetData, setPendingBudgetData] = useState<any>(null);
+  
+  // Add state for form data
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [formData, setFormData] = useState({
+    salary: "",
+    bonus: "",
+    rent: "",
+    utilities: "",
+    groceries: "",
+    transport: "",
+    entertainment: "",
+    shopping: "",
+    miscellaneous: "",
+    savings: "",
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const saveBudget = async (budgetData: any) => {
     try {
@@ -27,11 +51,13 @@ export default function CreateBudget() {
           month: budgetData.month,
           year: budgetData.year,
           ...Object.fromEntries(
-            Object.entries(budgetData).map(([key, value]) => [key, parseFloat(value) || 0])
+            Object.entries(budgetData).map(([key, value]) => [
+              key, 
+              typeof value === 'string' ? parseFloat(value) || 0 : value
+            ])
           ),
         }, {
-          onConflict: 'user_id,month,year',
-          ignoreDuplicates: false
+          onConflict: 'user_id,month,year'
         });
 
       if (error) throw error;
@@ -44,13 +70,21 @@ export default function CreateBudget() {
       navigate("/");
     } catch (error: any) {
       console.error("Error saving budget:", error);
-      throw error;
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = Object.fromEntries(new FormData(event.currentTarget));
+    const budgetData = {
+      ...formData,
+      month: selectedMonth,
+      year: selectedYear,
+    };
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -61,19 +95,19 @@ export default function CreateBudget() {
         .from("budgets")
         .select("*")
         .eq("user_id", user.id)
-        .eq("month", formData.month)
-        .eq("year", formData.year)
+        .eq("month", selectedMonth)
+        .eq("year", selectedYear)
         .maybeSingle();
 
       if (checkError) throw checkError;
 
       if (existingBudget) {
         // If budget exists, show confirmation dialog
-        setPendingBudgetData(formData);
+        setPendingBudgetData(budgetData);
         setShowConfirmDialog(true);
       } else {
         // If no budget exists, save directly
-        await saveBudget(formData);
+        await saveBudget(budgetData);
       }
     } catch (error: any) {
       toast({
@@ -105,9 +139,20 @@ export default function CreateBudget() {
         <Card className="bg-white/10 backdrop-blur-lg">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-8">
-              <MonthYearSelector />
-              <IncomeSection />
-              <ExpensesSection />
+              <MonthYearSelector
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+                onMonthChange={setSelectedMonth}
+                onYearChange={setSelectedYear}
+              />
+              <IncomeSection
+                formData={formData}
+                onInputChange={handleInputChange}
+              />
+              <ExpensesSection
+                formData={formData}
+                onInputChange={handleInputChange}
+              />
               
               <div className="flex justify-end">
                 <Button type="submit" className="bg-white text-indigo-600 hover:bg-gray-100">
@@ -122,6 +167,8 @@ export default function CreateBudget() {
           open={showConfirmDialog}
           onOpenChange={setShowConfirmDialog}
           onConfirm={handleConfirmOverwrite}
+          month={selectedMonth}
+          year={selectedYear}
         />
       </div>
     </div>
