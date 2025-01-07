@@ -1,21 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import MonthYearPicker from "@/components/MonthYearPicker";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { MonthYearSelector } from "@/components/budget/MonthYearSelector";
+import { IncomeSection } from "@/components/budget/IncomeSection";
+import { ExpensesSection } from "@/components/budget/ExpensesSection";
+import { BudgetConfirmDialog } from "@/components/budget/BudgetConfirmDialog";
 
 const CreateBudget = () => {
   const navigate = useNavigate();
@@ -23,7 +14,7 @@ const CreateBudget = () => {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
-  const [pendingBudgetData, setPendingBudgetData] = useState<any>(null);
+  const [pendingBudgetData, setPendingBudgetData] = useState<Record<string, string> | null>(null);
   const [formData, setFormData] = useState({
     salary: "0",
     bonus: "0",
@@ -43,7 +34,7 @@ const CreateBudget = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const saveBudget = async (budgetData: any) => {
+  const saveBudget = async (budgetData: Record<string, string>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -139,74 +130,16 @@ const CreateBudget = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="space-y-4">
-            <Label>Select Month and Year</Label>
-            <MonthYearPicker
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onMonthChange={setSelectedMonth}
-              onYearChange={setSelectedYear}
-            />
-          </div>
+          <MonthYearSelector
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+          />
 
           <div className="space-y-6">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Monthly Income</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="salary">Salary</Label>
-                  <Input
-                    id="salary"
-                    name="salary"
-                    type="text"
-                    value={formData.salary}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bonus">Bonus</Label>
-                  <Input
-                    id="bonus"
-                    name="bonus"
-                    type="text"
-                    value={formData.bonus}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Expenses</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[
-                  "rent",
-                  "utilities",
-                  "groceries",
-                  "transport",
-                  "entertainment",
-                  "shopping",
-                  "miscellaneous",
-                  "savings",
-                ].map((field) => (
-                  <div key={field} className="space-y-2">
-                    <Label htmlFor={field} className="capitalize">
-                      {field}
-                    </Label>
-                    <Input
-                      id={field}
-                      name={field}
-                      type="text"
-                      value={formData[field as keyof typeof formData]}
-                      onChange={handleInputChange}
-                      placeholder="0.00"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <IncomeSection formData={formData} onInputChange={handleInputChange} />
+            <ExpensesSection formData={formData} onInputChange={handleInputChange} />
           </div>
 
           <div className="flex justify-end gap-4">
@@ -217,21 +150,13 @@ const CreateBudget = () => {
           </div>
         </form>
 
-        <AlertDialog open={showOverwriteDialog} onOpenChange={setShowOverwriteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Overwrite Existing Budget?</AlertDialogTitle>
-              <AlertDialogDescription>
-                A budget for {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear} already exists. 
-                Are you sure you want to overwrite it?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowOverwriteDialog(false)}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleOverwriteConfirm}>Overwrite</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <BudgetConfirmDialog
+          open={showOverwriteDialog}
+          onOpenChange={setShowOverwriteDialog}
+          onConfirm={handleOverwriteConfirm}
+          month={selectedMonth}
+          year={selectedYear}
+        />
       </div>
     </div>
   );
