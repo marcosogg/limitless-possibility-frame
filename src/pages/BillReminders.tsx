@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { BillReminderForm } from "@/components/bill-reminder/BillReminderForm"; // Correct import
+import { BillReminderForm } from "@/components/bill-reminder/BillReminderForm";
 import type { BillReminderInsert } from "@/types/bill-reminder";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
