@@ -26,9 +26,40 @@ export default function RevolutImport() {
       // Remove header row and parse remaining rows
       const header = rows[0].split('\t');
       const parsedTransactions = rows.slice(1)
-        .filter(row => row.trim()) // Skip empty rows
-        .map(row => {
-          const values = row.split('\t');
+      .filter(row => row.trim()) // Skip empty rows
+      .map((row, index) => {
+        const values = row.split('\t');
+
+        if (values.length !== expectedColumns) {
+          console.error(`Row ${index + 2} has incorrect number of columns:`, values);
+          throw new Error(`Invalid row format at line ${index + 2}: Expected ${expectedColumns} columns but found ${values.length}`);
+        }
+
+        if (!values[2] || !values[3] || !values[4] || !values[5] || !values[7]) {
+          throw new Error(`Missing required fields at line ${index + 2}`);
+        }
+
+        // *** DATE PARSING WITH LOGGING ***
+        console.log("Raw date string:", values[3]); // LOG THE RAW DATE STRING
+        let parsedDate;
+        try {
+          parsedDate = parse(values[3], "dd/MM/yyyy HH:mm", new Date());
+          console.log("Parsed date:", parsedDate); // LOG THE PARSED DATE OBJECT
+          if (isNaN(parsedDate.getTime())) {
+            throw new Error("Invalid date format");
+          }
+        } catch (error) {
+          console.error(`Error parsing date at line ${index + 2}:`, values[3], error);
+          toast({
+            title: "Error",
+            description: `Failed to parse date at line ${index + 2}: ${values[3]}`,
+            variant: "destructive",
+          });
+          return null; // Skip this row
+        }
+        const isoDate = parsedDate.toISOString();
+        console.log("ISO date string:", isoDate); // LOG THE ISO DATE STRING
+        // *** END OF DATE PARSING ***
           return {
             type: values[0] || '',
             product: values[1] || '',
