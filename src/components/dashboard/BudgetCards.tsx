@@ -40,7 +40,7 @@ const getProgressBarColor = (spent: number, planned: number): string => {
   const percentage = calculatePercentage(spent, planned);
   if (percentage < 75) return "bg-green-500";
   if (percentage < 100) return "bg-yellow-500";
-  return "bg-red-500";
+  return "bg-red-500"; // This line is actually not reachable anymore, but it's good practice to have a default return
 };
 
 export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCardsProps) {
@@ -207,7 +207,7 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
                     <div className="flex items-center space-x-2" role="progressbar" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}>
                       <Progress
                         value={percentage}
-                        className="flex-1"
+                        className={cn("flex-1", percentage === 100 && "bg-red-500")} // Add bg-red-500 class when progress is 100%
                         style={{ backgroundColor: '#e2e8f0' }}
                       >
                         <Progress
