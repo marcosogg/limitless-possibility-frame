@@ -1,17 +1,24 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface BudgetSummaryProps {
   totalIncome: number;
   totalExpenses: number;
+  totalSpent: number;
   remaining: number;
 }
 
-const BudgetSummary = ({ totalIncome, totalExpenses, remaining }: BudgetSummaryProps) => {
+const BudgetSummary = ({ totalIncome, totalExpenses, totalSpent, remaining }: BudgetSummaryProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const calculateProgress = (spent: number, total: number) => {
+    if (total === 0) return 0;
+    return Math.min((spent / total) * 100, 100);
   };
 
   return (
@@ -23,9 +30,15 @@ const BudgetSummary = ({ totalIncome, totalExpenses, remaining }: BudgetSummaryP
         </CardContent>
       </Card>
       <Card className="bg-white/10 backdrop-blur-lg text-white">
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-2">
           <p className="text-sm">Total Expenses</p>
-          <p className="text-2xl font-bold text-red-400">{formatCurrency(totalExpenses)}</p>
+          <p className="text-2xl font-bold text-red-400">
+            {formatCurrency(totalSpent)} / {formatCurrency(totalExpenses)}
+          </p>
+          <Progress 
+            value={calculateProgress(totalSpent, totalExpenses)} 
+            className="h-2 bg-white/20"
+          />
         </CardContent>
       </Card>
       <Card className="bg-white/10 backdrop-blur-lg text-white">

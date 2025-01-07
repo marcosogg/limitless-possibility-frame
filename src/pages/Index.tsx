@@ -11,19 +11,6 @@ import { BillRemindersCard } from "@/components/BillRemindersCard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BudgetCards } from "@/components/dashboard/BudgetCards";
 
-interface Budget {
-  salary: number;
-  bonus: number;
-  rent: number;
-  utilities: number;
-  groceries: number;
-  transport: number;
-  entertainment: number;
-  shopping: number;
-  miscellaneous: number;
-  savings: number;
-}
-
 export default function Index() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -90,6 +77,20 @@ export default function Index() {
     );
   };
 
+  const calculateTotalSpent = () => {
+    if (!budget) return 0;
+    return (
+      budget.rent_spent +
+      budget.utilities_spent +
+      budget.groceries_spent +
+      budget.transport_spent +
+      budget.entertainment_spent +
+      budget.shopping_spent +
+      budget.miscellaneous_spent +
+      budget.savings_spent
+    );
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -99,7 +100,8 @@ export default function Index() {
 
   const totalIncome = calculateTotalIncome();
   const totalExpenses = calculateTotalExpenses();
-  const remaining = totalIncome - totalExpenses;
+  const totalSpent = calculateTotalSpent();
+  const remaining = totalIncome - totalSpent;
 
   return (
     <div className="min-h-screen gradient-bg p-4 md:p-8">
@@ -123,6 +125,7 @@ export default function Index() {
               <BudgetSummary
                 totalIncome={totalIncome}
                 totalExpenses={totalExpenses}
+                totalSpent={totalSpent}
                 remaining={remaining}
               />
 
