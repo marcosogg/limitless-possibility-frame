@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { initialFormData, BillReminderFormData } from "@/types/bill-reminder";
 import { PhoneNumberInput } from "./PhoneNumberInput";
 import { ScheduleReminder } from "./ScheduleReminder";
+import { Label } from "@/components/ui/label"; // Import the Label component
 
 const formSchema = z.object({
   providerName: z.string().min(2, {
