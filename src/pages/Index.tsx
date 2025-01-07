@@ -10,6 +10,7 @@ import BudgetSummary from "@/components/BudgetSummary";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BudgetCards } from "@/components/dashboard/BudgetCards";
+import type { Budget } from "@/types/budget";
 
 export default function Index() {
   const { toast } = useToast();
