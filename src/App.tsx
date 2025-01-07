@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CreateBudget from "./pages/CreateBudget";
 import BillReminders from "./pages/BillReminders";
+import RevolutImport from "./pages/RevolutImport";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <BillReminders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/revolut-import"
+            element={
+              <ProtectedRoute>
+                <RevolutImport />
               </ProtectedRoute>
             }
           />
