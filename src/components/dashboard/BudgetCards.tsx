@@ -1,7 +1,7 @@
 // src/components/dashboard/BudgetCards.tsx
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Home, Zap, ShoppingCart, Car, Tv, ShoppingBag, MoreHorizontal, PiggyBank } from "lucide-react";
+import { Home, Zap, ShoppingCart, Car, Tv, ShoppingBag, MoreHorizontal, PiggyBank, AlertCircle } from "lucide-react";
 import type { Budget } from "@/types/budget";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,17 +30,8 @@ const CATEGORIES = [
 
 // Utility function to calculate the percentage spent
 const calculatePercentage = (spent: number, planned: number): number => {
-  if (planned === 0) return spent > 0 ? 100 : 0; // Handle cases where planned is 0
-  return spent > planned ? 100 : (spent / planned) * 100; // Progress bar at 100% if over budget
-};
-
-// Utility function to determine progress bar color
-const getProgressBarColor = (spent: number, planned: number): string => {
-  if (spent > planned) return "bg-red-500"; // Always red if over budget
-  const percentage = calculatePercentage(spent, planned);
-  if (percentage < 75) return "bg-green-500";
-  if (percentage < 100) return "bg-yellow-500";
-  return "bg-red-500"; // This line is actually not reachable anymore, but it's good practice to have a default return
+  if (planned === 0) return spent > 0 ? 100 : 0;
+  return spent > planned ? 100 : (spent / planned) * 100;
 };
 
 export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCardsProps) {
@@ -115,26 +106,17 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Overspending Indicator */}
-      {isOverBudget && (
-        <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm md:col-span-2">
-          <CardContent className="p-4">
-            <p className="font-semibold">
-              You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Planned Budget Card */}
       <Card className="bg-white shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Planned</h3>
-          <div className="space-y-4">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-gray-800">Monthly Plan</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-3">
             {CATEGORIES.map(({ name, icon: Icon, plannedKey }) => (
               <div key={name} className="flex justify-between items-center">
                 <div className="flex items-center space-x-3">
-                  <Icon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+                  <Icon className="h-4 w-4 text-gray-500" aria-hidden="true" />
                   <span className="text-sm text-gray-700">{name}</span>
                 </div>
                 <span className="text-sm font-medium">{formatCurrency(budget[plannedKey as keyof Budget])}</span>
@@ -153,13 +135,13 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
 
       {/* Spent Budget Card */}
       <Card className="bg-white shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Spent</h3>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg font-semibold text-gray-800">Current Status</CardTitle>
             {/* Edit/Cancel/Save Buttons */}
             {!isEditing ? (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                Edit
+              <Button variant="outline" size="sm" className="bg-blue-50 text-blue-600 hover:bg-blue-100" onClick={() => setIsEditing(true)}>
+                Update Expenses
               </Button>
             ) : (
               <div className="space-x-2">
@@ -175,18 +157,21 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
               </div>
             )}
           </div>
+        </CardHeader>
+        <CardContent className="pt-0">
           <div className="space-y-4">
             {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => {
               const spent = editedBudget[spentKey as keyof Budget];
               const planned = editedBudget[plannedKey as keyof Budget];
               const percentage = calculatePercentage(spent, planned);
               const remaining = planned - spent;
+              const isOverspent = spent > planned;
 
               return (
                 <div key={name} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <Icon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+                      <Icon className="h-4 w-4 text-gray-500" aria-hidden="true" />
                       <span className="text-sm text-gray-700">{name}</span>
                     </div>
                     {/* Input for Editing */}
@@ -204,24 +189,21 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
                   </div>
                   {/* Progress Bar and Numeric Display */}
                   {!isEditing && (
-                    <div className="flex items-center space-x-2" role="progressbar" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}>
+                    <>
                       <Progress
                         value={percentage}
-                        className={cn("flex-1", percentage === 100 && "bg-red-500")} // Add bg-red-500 class when progress is 100%
+                        className={cn("w-full h-2", isOverspent && "bg-red-500")}
                         style={{ backgroundColor: '#e2e8f0' }}
-                      >
-                        <Progress
-                          value={percentage}
-                          className={cn("h-full w-full flex-1 transition-all", getProgressBarColor(spent, planned))}
-                        />
-                      </Progress>
-                      <span className="text-xs text-gray-500">
-                        {formatCurrency(spent)} / {formatCurrency(planned)}
-                      </span>
-                      <span className={`text-xs font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ({formatCurrency(remaining)})
-                      </span>
-                    </div>
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>
+                          {formatCurrency(spent)} / {formatCurrency(planned)}
+                        </span>
+                        <span className={`font-medium ${isOverspent ? "text-red-600" : "text-green-600"}`}>
+                          ({isOverspent ? "+" : ""}{formatCurrency(remaining)})
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
               );
@@ -236,6 +218,19 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
           </div>
         </CardContent>
       </Card>
+      {/* Overspending Indicator (Moved outside the main grid) */}
+      {isOverBudget && (
+        <div className="col-span-full">
+          <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm">
+            <CardContent className="p-4 flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              <p className="font-semibold text-sm">
+                You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
