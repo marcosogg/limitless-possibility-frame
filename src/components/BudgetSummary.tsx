@@ -1,53 +1,55 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { DollarSign, Gift } from "lucide-react";
 
 interface BudgetSummaryProps {
   totalIncome: number;
-  totalExpenses: number;
-  totalSpent: number;
-  remaining: number;
+  salary: number;
+  bonus: number;
 }
 
-const BudgetSummary = ({ totalIncome, totalExpenses, totalSpent, remaining }: BudgetSummaryProps) => {
+const BudgetSummary = ({ totalIncome, salary, bonus }: BudgetSummaryProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
-  const calculateProgress = (spent: number, total: number) => {
-    if (total === 0) return 0;
-    return Math.min((spent / total) * 100, 100);
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="bg-white/10 backdrop-blur-lg text-white">
-        <CardContent className="p-4">
-          <p className="text-sm">Total Income</p>
-          <p className="text-2xl font-bold text-green-400">{formatCurrency(totalIncome)}</p>
-        </CardContent>
-      </Card>
-      <Card className="bg-white/10 backdrop-blur-lg text-white">
-        <CardContent className="p-4 space-y-2">
-          <p className="text-sm">Total Expenses</p>
-          <p className="text-2xl font-bold text-red-400">
-            {formatCurrency(totalSpent)} / {formatCurrency(totalExpenses)}
-          </p>
-          <Progress 
-            value={calculateProgress(totalSpent, totalExpenses)} 
-            className="h-2 bg-white/20"
-          />
-        </CardContent>
-      </Card>
-      <Card className="bg-white/10 backdrop-blur-lg text-white">
-        <CardContent className="p-4">
-          <p className="text-sm">Remaining</p>
-          <p className="text-2xl font-bold text-blue-400">{formatCurrency(remaining)}</p>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="bg-white shadow-sm">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Monthly Income</h2>
+          <p className="text-sm text-gray-500">Your income for this month</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <DollarSign className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Salary</p>
+                <p className="text-lg font-semibold">{formatCurrency(salary)}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <Gift className="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Bonus</p>
+                <p className="text-lg font-semibold">{formatCurrency(bonus)}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Income</p>
+              <p className="text-lg font-semibold text-green-600">{formatCurrency(totalIncome)}</p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
