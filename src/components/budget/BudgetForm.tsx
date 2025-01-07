@@ -1,14 +1,12 @@
-"use client"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { CalendarIcon, PiggyBank, Wallet } from 'lucide-react';
+import { format } from "date-fns";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { CalendarIcon, PiggyBank, Wallet } from 'lucide-react'
-import { format } from "date-fns"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -16,7 +14,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -25,20 +23,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 const formSchema = z.object({
   month: z.string(),
@@ -53,7 +51,7 @@ const formSchema = z.object({
   shopping: z.string().transform(Number),
   miscellaneous: z.string().transform(Number),
   savings: z.string().transform(Number),
-})
+});
 
 interface BudgetFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
@@ -76,7 +74,7 @@ export function BudgetForm({ onSubmit }: BudgetFormProps) {
       miscellaneous: "50",
       savings: "1000",
     },
-  })
+  });
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -332,5 +330,5 @@ export function BudgetForm({ onSubmit }: BudgetFormProps) {
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
