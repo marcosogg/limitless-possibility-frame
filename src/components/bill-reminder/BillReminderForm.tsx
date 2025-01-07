@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { initialFormData, BillReminderFormData } from "@/types/bill-reminder";
 
 const formSchema = z.object({
   providerName: z.string().min(2, {
@@ -67,6 +71,8 @@ interface BillReminderFormProps {
 
 export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -79,6 +85,78 @@ export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
       whatsappReminders: false,
     },
   });
+
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to create bill reminders");
+      }
+
+      const dueDate = parseInt(values.dueDate);
+      if (isNaN(dueDate) || dueDate < 1 || dueDate > 31) {
+        throw new Error("Due date must be between 1 and 31");
+      }
+
+      const amount = parseFloat(values.amount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error("Amount must be a positive number");
+      }
+
+      const { error: insertError } = await supabase.from("bill_reminders").insert({
+        provider_name: values.providerName,
+        due_date: dueDate,
+        amount: amount,
+        category: values.category,
+        notes: values.notes || null,
+        reminders_enabled: values.smsReminders,
+        phone_number: values.smsReminders ? "+353838770548" : null, // Hardcoded for now
+        user_id: user.id
+      });
+
+      if (insertError) throw insertError;
+
+      if (values.smsReminders) {
+        const { error: smsError } = await supabase.functions.invoke('send-sms', {
+          body: {
+            reminder: {
+              provider_name: values.providerName,
+              due_date: dueDate,
+              amount: amount,
+              phone_number: "+353838770548" // Hardcoded for now
+            }
+          }
+        });
+
+        if (smsError) {
+          console.error('Failed to send SMS:', smsError);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: `Bill reminder created but SMS notification failed to send.`,
+          });
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Bill reminder created successfully",
+      });
+
+      form.reset(initialFormData);
+      navigate("/");
+    } catch (error: any) {
+      console.error('Form submission error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -96,7 +174,7 @@ export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="providerName"
@@ -231,7 +309,9 @@ export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
               )}
             />
 
-            <Button type="submit" className="w-full">Create Bill Reminder</Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Creating..." : "Create Bill Reminder"}
+            </Button>
           </form>
         </Form>
       </CardContent>
