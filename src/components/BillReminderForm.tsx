@@ -67,7 +67,6 @@ export function BillReminderForm() {
           provider_name: formData.provider_name,
           due_date: dueDate,
           amount: amount,
-          category: formData.category,
           notes: formData.notes || null,
           reminders_enabled: formData.reminders_enabled,
           phone_number: formData.reminders_enabled ? phoneNumber : null,
