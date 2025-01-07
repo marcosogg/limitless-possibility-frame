@@ -21,12 +21,8 @@ export default function RevolutImport() {
   setIsProcessing(true);
   try {
     const text = await file.text();
-    
-    // Debug: Log the first few lines
-    console.log("First few lines:", text.split('\n').slice(0, 3));
-    
     const rows = text.split('\n');
-    const header = rows[0].split(','); // Changed from tab to comma
+    const header = rows[0].split(',');
     const expectedColumns = 10;
 
     if (header.length !== expectedColumns) {
@@ -36,25 +32,46 @@ export default function RevolutImport() {
     const parsedTransactions = rows
       .slice(1)
       .filter(row => row.trim())
-      .map(row => {
-        const values = row.split(','); // Changed from tab to comma
-        return {
-          type: values[0],
-          product: values[1],
-          startedDate: values[2],
-          completedDate: values[3],
-          description: values[4],
-          amount: values[5],
-          fee: values[6],
-          currency: values[7],
-          state: values[8],
-          balance: values[9]
-        };
-      });
+      .map((row, index) => {
+        const values = row.split(',');
+        
+        // Debug: Log the date string we're trying to parse
+        console.log(`Row ${index + 1} completed date:`, values[3]);
+        
+        try {
+          // Parse the date using the correct format
+          const parsedDate = parse(
+            values[3].trim(),
+            'yyyy-MM-dd HH:mm:ss',
+            new Date()
+          );
+
+          // Verify the parsed date is valid
+          if (isNaN(parsedDate.getTime())) {
+            console.error(`Invalid date at row ${index + 1}:`, values[3]);
+            return null;
+          }
+
+          return {
+            type: values[0],
+            product: values[1],
+            startedDate: values[2],
+            completedDate: parsedDate.toISOString(), // Convert to ISO string
+            description: values[4],
+            amount: values[5],
+            fee: values[6],
+            currency: values[7],
+            state: values[8],
+            balance: values[9]
+          };
+        } catch (error) {
+          console.error(`Error parsing date at row ${index + 1}:`, error);
+          return null;
+        }
+      })
+      .filter((transaction): transaction is RevolutTransaction => transaction !== null);
 
     setTransactions(parsedTransactions);
-    
-    // Log success
     console.log("Successfully parsed transactions:", parsedTransactions.length);
 
   } catch (error) {
@@ -68,10 +85,6 @@ export default function RevolutImport() {
     setIsProcessing(false);
   }
 };
-
-
-
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Import Revolut Statement</h1>
