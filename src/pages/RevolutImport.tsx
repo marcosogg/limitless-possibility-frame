@@ -4,11 +4,25 @@ import FileUploadZone from "@/components/revolut/FileUploadZone";
 import TransactionsTable from "@/components/revolut/TransactionsTable";
 import type { RevolutTransaction } from "@/types/revolut";
 import { supabase } from "@/integrations/supabase/client";
+import { parse } from "date-fns";
 
 export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<RevolutTransaction[]>([]);
+
+  const parseDate = (dateStr: string) => {
+    try {
+      const parsedDate = parse(dateStr, "dd/MM/yyyy HH:mm", new Date());
+      if (isNaN(parsedDate.getTime())) {
+        throw new Error("Invalid date");
+      }
+      return parsedDate.toISOString();
+    } catch (error) {
+      console.error("Error parsing date:", dateStr, error);
+      throw new Error(`Invalid date format: ${dateStr}`);
+    }
+  };
 
   const processFile = async (file: File) => {
     setIsProcessing(true);
@@ -17,16 +31,18 @@ export default function RevolutImport() {
       const rows = text.split('\n');
       
       // Remove header row and parse remaining rows
-      const header = rows[0].split(',');
+      const header = rows[0].split('\t'); // Changed to tab delimiter
       const parsedTransactions = rows.slice(1)
         .filter(row => row.trim()) // Skip empty rows
         .map(row => {
-          const values = row.split(',');
+          const values = row.split('\t'); // Changed to tab delimiter
+          const amount = parseFloat(values[5].replace(/[^\d.-]/g, '')); // Handle negative numbers
+
           return {
             type: values[0] || '',
             product: values[1] || '',
-            startedDate: values[2] || '',
-            completedDate: values[3] || '',
+            startedDate: parseDate(values[2]),
+            completedDate: parseDate(values[3]),
             description: values[4] || '',
             amount: values[5] || '',
             fee: values[6] || '',
@@ -44,7 +60,7 @@ export default function RevolutImport() {
 
       const { error } = await supabase.from('revolut_transactions').insert(
         parsedTransactions.map(t => ({
-          date: new Date(t.completedDate).toISOString(),
+          date: t.completedDate,
           description: t.description,
           amount: parseFloat(t.amount),
           currency: t.currency,
@@ -53,6 +69,7 @@ export default function RevolutImport() {
       );
 
       if (error) {
+        console.error("Supabase error:", error);
         throw error;
       }
 
@@ -66,7 +83,7 @@ export default function RevolutImport() {
       console.error('Error processing file:', error);
       toast({
         title: "Error",
-        description: "Failed to process the file",
+        description: error.message || "Failed to process the file",
         variant: "destructive",
       });
     } finally {
