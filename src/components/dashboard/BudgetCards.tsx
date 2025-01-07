@@ -25,20 +25,19 @@ const calculatePercentage = (spent: number, planned: number): number => {
 export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedBudget, setEditedBudget] = useState(budget);
+  const [editedBudget, setEditedBudget] = useState<Budget>(budget);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Update editedBudget when the budget prop changes
   useEffect(() => {
     setEditedBudget(budget);
   }, [budget]);
 
-  const calculateTotalPlanned = () => {
-    return CATEGORIES.reduce((acc, cat) => acc + budget[cat.plannedKey as keyof Budget], 0);
+  const calculateTotalPlanned = (): number => {
+    return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.plannedKey as keyof Budget]), 0);
   };
 
-  const calculateTotalSpent = () => {
-    return CATEGORIES.reduce((acc, cat) => acc + budget[cat.spentKey as keyof Budget], 0);
+  const calculateTotalSpent = (): number => {
+    return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.spentKey as keyof Budget]), 0);
   };
 
   const handleSpentChange = (category: string, value: string) => {

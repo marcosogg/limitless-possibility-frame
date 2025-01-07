@@ -2,11 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { CalendarIcon, PiggyBank, Wallet } from 'lucide-react';
-import { format } from "date-fns";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -18,18 +15,12 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -41,16 +32,16 @@ import {
 const formSchema = z.object({
   month: z.string(),
   year: z.string(),
-  salary: z.string().transform(Number),
-  bonus: z.string().transform(Number),
-  rent: z.string().transform(Number),
-  utilities: z.string().transform(Number),
-  groceries: z.string().transform(Number),
-  transport: z.string().transform(Number),
-  entertainment: z.string().transform(Number),
-  shopping: z.string().transform(Number),
-  miscellaneous: z.string().transform(Number),
-  savings: z.string().transform(Number),
+  salary: z.number(),
+  bonus: z.number(),
+  rent: z.number(),
+  utilities: z.number(),
+  groceries: z.number(),
+  transport: z.number(),
+  entertainment: z.number(),
+  shopping: z.number(),
+  miscellaneous: z.number(),
+  savings: z.number(),
 });
 
 interface BudgetFormProps {
@@ -63,16 +54,16 @@ export function BudgetForm({ onSubmit }: BudgetFormProps) {
     defaultValues: {
       month: "1",
       year: "2025",
-      salary: "2700",
-      bonus: "0",
-      rent: "1000",
-      utilities: "200",
-      groceries: "100",
-      transport: "40",
-      entertainment: "50",
-      shopping: "50",
-      miscellaneous: "50",
-      savings: "1000",
+      salary: 2700,
+      bonus: 0,
+      rent: 1000,
+      utilities: 200,
+      groceries: 100,
+      transport: 40,
+      entertainment: 50,
+      shopping: 50,
+      miscellaneous: 50,
+      savings: 1000,
     },
   });
 

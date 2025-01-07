@@ -1,4 +1,3 @@
-// src/pages/Index.tsx
 import { useState, useEffect } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,12 +63,12 @@ export default function Index() {
 
   const calculateTotalPlanned = () => {
     if (!budget) return 0;
-    return CATEGORIES.reduce((acc, cat) => acc + budget[cat.plannedKey as keyof Budget], 0);
+    return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.plannedKey as keyof Budget]), 0);
   };
 
   const calculateTotalSpent = () => {
     if (!budget) return 0;
-    return CATEGORIES.reduce((acc, cat) => acc + budget[cat.spentKey as keyof Budget], 0);
+    return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.spentKey as keyof Budget]), 0);
   };
 
   const handleUpdateSpent = (updatedBudget: Budget) => {
@@ -100,11 +99,10 @@ export default function Index() {
         ) : budget ? (
           <div className="space-y-6">
             <BudgetOverview
-              monthlyIncome={budget.salary + budget.bonus}
+              monthlyIncome={Number(budget.salary) + Number(budget.bonus)}
               plannedBudget={calculateTotalPlanned()}
               currentSpending={calculateTotalSpent()}
             />
-            {/* Overspending Indicator */}
             {isOverBudget && (
               <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm">
                 <CardContent className="p-4 flex items-center">
@@ -117,8 +115,7 @@ export default function Index() {
             )}
             <BudgetCards
               budget={budget}
-              formatCurrency={formatCurrency}
-              onUpdateSpent={handleUpdateSpent} // Pass the function here
+              onUpdateSpent={handleUpdateSpent}
             />
             <BillRemindersCard />
           </div>
