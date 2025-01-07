@@ -25,25 +25,23 @@ export default function RevolutImport() {
           const values = row.split(',');
           
           // Parse the completed date string into a Date object
-          // Revolut typically uses format: "2024-01-07 12:34:56"
-          const completedDateStr = values[3].trim().replace(/"/g, ''); // Remove any quotes
+          // Format: "31/12/2023 16:08"
+          const completedDateStr = values[3].trim().replace(/"/g, '');
           let parsedDate;
           
           try {
-            // Try parsing with different date formats
-            parsedDate = parse(completedDateStr, 'yyyy-MM-dd HH:mm:ss', new Date());
+            parsedDate = parse(completedDateStr, 'dd/MM/yyyy HH:mm', new Date());
             if (isNaN(parsedDate.getTime())) {
-              // Try alternative format if first attempt fails
-              parsedDate = parse(completedDateStr, 'dd-MM-yyyy HH:mm:ss', new Date());
+              console.error('Failed to parse date:', completedDateStr);
+              parsedDate = new Date(); // Fallback to current date if parsing fails
             }
           } catch (error) {
             console.error('Error parsing date:', completedDateStr, error);
-            // If parsing fails, use current date as fallback
-            parsedDate = new Date();
+            parsedDate = new Date(); // Fallback to current date
           }
 
           // Format amount: remove currency symbol and convert to number
-          const rawAmount = values[5].replace(/[^-0-9.]/g, '');
+          const rawAmount = values[5].trim().replace(/[^-0-9.]/g, '');
           const amount = parseFloat(rawAmount) || 0;
 
           return {
@@ -68,7 +66,10 @@ export default function RevolutImport() {
 
       const { error } = await supabase.from('revolut_transactions').insert(
         parsedTransactions.map(t => ({
-          date: format(parse(t.completedDate, 'yyyy-MM-dd HH:mm:ss', new Date()), 'yyyy-MM-dd'),
+          date: format(
+            parse(t.completedDate, 'dd/MM/yyyy HH:mm', new Date()),
+            'yyyy-MM-dd'
+          ),
           description: t.description,
           amount: t.amount,
           currency: t.currency,
@@ -90,7 +91,7 @@ export default function RevolutImport() {
       console.error('Error processing file:', error);
       toast({
         title: "Error",
-        description: "Failed to process the file. Please check the date format in your CSV.",
+        description: "Failed to process the file. Please check the format of your CSV.",
         variant: "destructive",
       });
     } finally {
