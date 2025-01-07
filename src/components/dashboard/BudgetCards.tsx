@@ -30,12 +30,14 @@ const CATEGORIES = [
 
 // Utility function to calculate the percentage spent
 const calculatePercentage = (spent: number, planned: number): number => {
-  if (planned === 0) return 0;
-  return Math.min((spent / planned) * 100, 100);
+  if (planned === 0) return spent > 0 ? 100 : 0; // Handle cases where planned is 0
+  return spent > planned ? 100 : (spent / planned) * 100; // Progress bar at 100% if over budget
 };
 
 // Utility function to determine progress bar color
-const getProgressBarColor = (percentage: number): string => {
+const getProgressBarColor = (spent: number, planned: number): string => {
+  if (spent > planned) return "bg-red-500"; // Always red if over budget
+  const percentage = calculatePercentage(spent, planned);
   if (percentage < 75) return "bg-green-500";
   if (percentage < 100) return "bg-yellow-500";
   return "bg-red-500";
@@ -112,10 +114,10 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
   const isOverBudget = overspentCategories.length > 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Overspending Indicator */}
       {isOverBudget && (
-        <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm md:col-span-3">
+        <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm md:col-span-2">
           <CardContent className="p-4">
             <p className="font-semibold">
               You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
@@ -178,6 +180,7 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
               const spent = editedBudget[spentKey as keyof Budget];
               const planned = editedBudget[plannedKey as keyof Budget];
               const percentage = calculatePercentage(spent, planned);
+              const remaining = planned - spent;
 
               return (
                 <div key={name} className="space-y-2">
@@ -209,14 +212,14 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
                       >
                         <Progress
                           value={percentage}
-                          className={cn("h-full w-full flex-1 transition-all", getProgressBarColor(percentage))}
+                          className={cn("h-full w-full flex-1 transition-all", getProgressBarColor(spent, planned))}
                         />
                       </Progress>
                       <span className="text-xs text-gray-500">
                         {formatCurrency(spent)} / {formatCurrency(planned)}
                       </span>
-                      <span className={`text-xs font-medium ${spent - planned >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        ({formatCurrency(spent - planned)})
+                      <span className={`text-xs font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ({formatCurrency(remaining)})
                       </span>
                     </div>
                   )}
@@ -228,38 +231,6 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total Spent</span>
                 <span className="font-semibold">{formatCurrency(calculateTotalSpent())}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Remaining Budget Card */}
-      <Card className="bg-white shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Remaining</h3>
-          <div className="space-y-4">
-            {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => {
-              const remaining = budget[plannedKey as keyof Budget] - budget[spentKey as keyof Budget];
-              return (
-                <div key={name} className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <Icon className="h-5 w-5 text-gray-500" aria-hidden="true" />
-                    <span className="text-sm text-gray-700">{name}</span>
-                  </div>
-                  <span className={`text-sm font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(remaining)}
-                  </span>
-                </div>
-              );
-            })}
-            {/* Total Remaining */}
-            <div className="pt-4 border-t">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Total Remaining</span>
-                <span className={`font-semibold ${(budget.salary + budget.bonus - calculateTotalSpent()) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatCurrency(budget.salary + budget.bonus - calculateTotalSpent())}
-                </span>
               </div>
             </div>
           </div>
