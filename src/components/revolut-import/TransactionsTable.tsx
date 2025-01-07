@@ -1,3 +1,5 @@
+// src/components/revolut-import/TransactionsTable.tsx
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -6,45 +8,140 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RevolutTransaction } from "@/types/revolut";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+import { TransactionFilters } from "./TransactionFilters";
+import { format, parseISO, isWithinInterval } from "date-fns";
+import type { RevolutTransactionDB } from "@/types/revolut";
 
 interface TransactionsTableProps {
-  transactions: RevolutTransaction[];
+  transactions: RevolutTransactionDB[];
 }
 
-export const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
+type SortConfig = {
+  key: keyof RevolutTransactionDB;
+  direction: "asc" | "desc";
+} | null;
+
+export function TransactionsTable({ transactions }: TransactionsTableProps) {
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+  const [filters, setFilters] = useState({
+    category: "All",
+    dateFrom: undefined as Date | undefined,
+    dateTo: undefined as Date | undefined,
+    searchTerm: "",
+  });
+
+  const handleSort = (key: keyof RevolutTransactionDB) => {
+    setSortConfig((current) => {
+      if (current?.key === key) {
+        return {
+          key,
+          direction: current.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const filteredAndSortedTransactions = useMemo(() => {
+    let result = [...transactions];
+
+    // Apply filters
+    result = result.filter((transaction) => {
+      const matchesCategory =
+        filters.category === "All" || transaction.category === filters.category;
+      
+      const matchesSearch = filters.searchTerm
+        ? transaction.description.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        : true;
+
+      const matchesDateRange = filters.dateFrom && filters.dateTo
+        ? isWithinInterval(parseISO(transaction.date), {
+            start: filters.dateFrom,
+            end: filters.dateTo,
+          })
+        : true;
+
+      return matchesCategory && matchesSearch && matchesDateRange;
+    });
+
+    // Apply sorting
+    if (sortConfig) {
+      result.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [transactions, sortConfig, filters]);
+
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Imported Transactions</h2>
-      <div className="overflow-x-auto">
+    <div className="space-y-4">
+      <TransactionFilters onFilterChange={setFilters} />
+      
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Product</TableHead>
-              <TableHead>Started Date</TableHead>
-              <TableHead>Completed Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Fee</TableHead>
-              <TableHead>Currency</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead>Balance</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("date")}
+                >
+                  Date
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("description")}
+                >
+                  Description
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("amount")}
+                >
+                  Amount
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("category")}
+                >
+                  Category
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction, index) => (
+            {filteredAndSortedTransactions.map((transaction, index) => (
               <TableRow key={index}>
-                <TableCell>{transaction.type}</TableCell>
-                <TableCell>{transaction.product}</TableCell>
-                <TableCell>{transaction.startedDate}</TableCell>
-                <TableCell>{transaction.completedDate}</TableCell>
+                <TableCell>
+                  {format(parseISO(transaction.date), "PPP")}
+                </TableCell>
                 <TableCell>{transaction.description}</TableCell>
-                <TableCell>{transaction.amount}</TableCell>
-                <TableCell>{transaction.fee}</TableCell>
-                <TableCell>{transaction.currency}</TableCell>
-                <TableCell>{transaction.state}</TableCell>
-                <TableCell>{transaction.balance}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat("en-IE", {
+                    style: "currency",
+                    currency: transaction.currency,
+                  }).format(transaction.amount)}
+                </TableCell>
+                <TableCell>{transaction.category || "Uncategorized"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -52,4 +149,4 @@ export const TransactionsTable = ({ transactions }: TransactionsTableProps) => {
       </div>
     </div>
   );
-};
+}
