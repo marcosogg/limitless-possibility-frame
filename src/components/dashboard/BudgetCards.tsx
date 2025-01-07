@@ -6,25 +6,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { CATEGORIES } from "@/constants/budget";
+import { formatCurrency } from "@/lib/utils";
 
 interface BudgetCardsProps {
   budget: Budget;
-  formatCurrency: (amount: number) => string;
   onUpdateSpent: (updatedBudget: Budget) => void;
 }
-
-// Define the categories outside the component for reusability
-const CATEGORIES = [
-  { name: 'Rent', icon: Home, plannedKey: 'rent', spentKey: 'rent_spent' },
-  { name: 'Utilities', icon: Zap, plannedKey: 'utilities', spentKey: 'utilities_spent' },
-  { name: 'Groceries', icon: ShoppingCart, plannedKey: 'groceries', spentKey: 'groceries_spent' },
-  { name: 'Transport', icon: Car, plannedKey: 'transport', spentKey: 'transport_spent' },
-  { name: 'Entertainment', icon: Tv, plannedKey: 'entertainment', spentKey: 'entertainment_spent' },
-  { name: 'Shopping', icon: ShoppingBag, plannedKey: 'shopping', spentKey: 'shopping_spent' },
-  { name: 'Miscellaneous', icon: MoreHorizontal, plannedKey: 'miscellaneous', spentKey: 'miscellaneous_spent' },
-  { name: 'Savings', icon: PiggyBank, plannedKey: 'savings', spentKey: 'savings_spent' },
-];
 
 // Utility function to calculate the percentage spent
 const calculatePercentage = (spent: number, planned: number): number => {
@@ -32,7 +22,7 @@ const calculatePercentage = (spent: number, planned: number): number => {
   return spent > planned ? 100 : (spent / planned) * 100;
 };
 
-export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCardsProps) {
+export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editedBudget, setEditedBudget] = useState(budget);
@@ -161,6 +151,7 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
               const percentage = calculatePercentage(spent, planned);
               const remaining = planned - spent;
               const isOverspent = spent > planned;
+              const formattedRemaining = formatCurrency(Math.abs(remaining));
 
               return (
                 <div key={name} className="space-y-2">
@@ -204,7 +195,7 @@ export function BudgetCards({ budget, formatCurrency, onUpdateSpent }: BudgetCar
                           "font-medium",
                           isOverspent ? "text-red-600" : "text-green-600"
                         )}>
-                          ({isOverspent ? "+" : ""}{formatCurrency(Math.abs(remaining))})
+                          ({isOverspent ? "+" : ""}{formattedRemaining})
                         </span>
                       </div>
                     </>

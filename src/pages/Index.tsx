@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import MonthYearPicker from "@/components/MonthYearPicker";
-import { BudgetOverview } from "@/components/dashboard/BudgetOverview"; // Import the new component
+import { BudgetOverview } from "@/components/dashboard/BudgetOverview";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BudgetCards } from "@/components/dashboard/BudgetCards";
+import { CATEGORIES } from "@/constants/budget";
 import type { Budget } from "@/types/budget";
+import { formatCurrency } from "@/lib/utils";
 
 export default function Index() {
   const { toast } = useToast();
@@ -59,15 +61,14 @@ export default function Index() {
     fetchBudget();
   }, [selectedMonth, selectedYear]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  const calculateTotalPlanned = () => {
+    if (!budget) return 0;
+    return CATEGORIES.reduce((acc, cat) => acc + budget[cat.plannedKey as keyof Budget], 0);
   };
 
-  const handleUpdateSpent = (updatedBudget: Budget) => {
-    setBudget(updatedBudget);
+  const calculateTotalSpent = () => {
+    if (!budget) return 0;
+    return CATEGORIES.reduce((acc, cat) => acc + budget[cat.spentKey as keyof Budget], 0);
   };
 
   const overspentCategories = budget
@@ -111,7 +112,6 @@ export default function Index() {
             )}
             <BudgetCards
               budget={budget}
-              formatCurrency={formatCurrency}
               onUpdateSpent={handleUpdateSpent}
             />
             <BillRemindersCard />
