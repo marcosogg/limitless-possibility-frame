@@ -1,19 +1,18 @@
-"use client"
+// src/components/bill-reminder/BillReminderForm.tsx
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { ArrowLeft } from 'lucide-react'
-import Link from "next/link"
-
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -22,17 +21,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   providerName: z.string().min(2, {
@@ -52,7 +51,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   smsReminders: z.boolean().default(false),
   whatsappReminders: z.boolean().default(false),
-})
+});
 
 const categories = [
   { value: "utilities", label: "Utilities" },
@@ -61,7 +60,7 @@ const categories = [
   { value: "phone", label: "Phone" },
   { value: "insurance", label: "Insurance" },
   { value: "other", label: "Other" },
-]
+];
 
 interface BillReminderFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
@@ -79,7 +78,7 @@ export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
       smsReminders: false,
       whatsappReminders: false,
     },
-  })
+  });
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -87,7 +86,7 @@ export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl">Add Bill Reminder</CardTitle>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard" className="gap-2">
+            <Link to="/dashboard" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Link>
@@ -239,5 +238,5 @@ export function BillReminderForm({ onSubmit }: BillReminderFormProps) {
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -26,6 +26,8 @@ export default function BillReminders() {
           ...billReminderData,
           due_date: parseInt(billReminderData.dueDate),
           amount: parseFloat(billReminderData.amount),
+          reminders_enabled: billReminderData.smsReminders,
+          phone_number: billReminderData.smsReminders ? "+353838770548" : null,
         } as BillReminderInsert);
 
       if (error) throw error;
