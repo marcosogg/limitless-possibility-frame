@@ -26,7 +26,7 @@ export default function BillReminders() {
           due_date: parseInt(billReminderData.dueDate),
           amount: parseFloat(billReminderData.amount),
           reminders_enabled: billReminderData.smsReminders,
-          phone_number: billReminderData.smsReminders ? "+353838770548" : null,
+          phone_number: billReminderData.smsReminders ? billReminderData.phoneNumbers[0] : null,
         } as BillReminderInsert);
 
       if (error) throw error;
@@ -38,8 +38,9 @@ export default function BillReminders() {
               provider_name: billReminderData.providerName,
               due_date: parseInt(billReminderData.dueDate),
               amount: parseFloat(billReminderData.amount),
-              phone_number: "+353838770548" // Hardcoded for now
-            }
+              phone_number: billReminderData.phoneNumbers[0]
+            },
+            scheduleDate: billReminderData.scheduleDate
           }
         });
 
