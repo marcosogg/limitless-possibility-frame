@@ -12,6 +12,7 @@ export interface RevolutTransaction {
 }
 
 export interface RevolutTransactionDB {
+  id: string;
   date: string;
   description: string;
   amount: number;
