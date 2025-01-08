@@ -1,4 +1,3 @@
-// src/pages/RevolutImport.tsx
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { parse } from "date-fns";
@@ -13,6 +12,7 @@ export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<RevolutTransactionDB[]>([]);
+  const [existingFiles, setExistingFiles] = useState<string[]>([]);
   const navigate = useNavigate();
 
   // Function to categorize transactions based on description patterns
@@ -62,7 +62,7 @@ export default function RevolutImport() {
     return "Other";
   };
 
-  // Fetch existing transactions
+  // Fetch existing transactions and extract filenames
   const fetchTransactions = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -78,12 +78,29 @@ export default function RevolutImport() {
 
       const { data, error } = await supabase
         .from('revolut_transactions')
+        .select('description')
+        .eq('profile_id', user.id);
+
+      if (error) throw error;
+      
+      // Extract unique filenames from descriptions
+      const fileNames = new Set(data?.map(t => {
+        // Extract filename if it's in the description
+        const match = t.description.match(/from file: (.+\.csv)/i);
+        return match ? match[1] : null;
+      }).filter(Boolean));
+      
+      setExistingFiles(Array.from(fileNames));
+      
+      // Fetch all transactions for display
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('revolut_transactions')
         .select('*')
         .eq('profile_id', user.id)
         .order('date', { ascending: false });
 
-      if (error) throw error;
-      setTransactions(data || []);
+      if (transactionsError) throw transactionsError;
+      setTransactions(transactionsData || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast({
@@ -94,7 +111,6 @@ export default function RevolutImport() {
     }
   };
 
-  // Call fetchTransactions on component mount
   useEffect(() => {
     fetchTransactions();
   }, []);
@@ -111,13 +127,11 @@ export default function RevolutImport() {
         throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
       }
 
-      // Get user ID for database insertion
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         throw new Error('Failed to get user ID');
       }
 
-      // Process and filter transactions
       const processedTransactions = rows
         .slice(1)
         .filter(row => row.trim())
@@ -132,7 +146,7 @@ export default function RevolutImport() {
             );
 
             const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
-            const description = values[4].trim();
+            const description = `${values[4].trim()} (from file: ${file.name})`;
             const category = categorizeTransaction(description);
 
             return {
@@ -150,7 +164,6 @@ export default function RevolutImport() {
         })
         .filter((t): t is RevolutTransactionDB => t !== null);
 
-      // Insert into database
       const { error: insertError } = await supabase
         .from('revolut_transactions')
         .insert(processedTransactions);
@@ -159,7 +172,6 @@ export default function RevolutImport() {
         throw insertError;
       }
 
-      // Refresh the transactions list
       await fetchTransactions();
 
       toast({
@@ -194,6 +206,7 @@ export default function RevolutImport() {
       <FileUploadZone 
         isProcessing={isProcessing}
         onFileSelect={processFile}
+        existingFiles={existingFiles}
       />
 
       {transactions.length > 0 && (
