@@ -38,10 +38,15 @@ export const FileUploadZone = ({
   };
 
   const handleFileProceed = (file: File) => {
+    console.log("Checking file:", file.name);
+    console.log("Existing files:", existingFiles);
+    
     if (existingFiles.includes(file.name)) {
+      console.log("File exists, showing confirmation dialog");
       setPendingFile(file);
       setShowConfirmDialog(true);
     } else {
+      console.log("New file, proceeding with upload");
       onFileSelect(file);
     }
   };

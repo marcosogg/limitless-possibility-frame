@@ -15,51 +15,16 @@ export default function RevolutImport() {
   const [existingFiles, setExistingFiles] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  // Function to categorize transactions based on description patterns
-  const categorizeTransaction = (description: string): string => {
-    const patterns = {
-      Groceries: [
-        /tesco/i, /lidl/i, /aldi/i, /supervalu/i, /dunnes/i, /spar/i,
-        /centra/i, /grocery/i, /food/i, /market/i
-      ],
-      Transportation: [
-        /dublin bus/i, /irish rail/i, /leap/i, /taxi/i, /uber/i, /transport/i,
-        /bus/i, /train/i, /luas/i, /dart/i
-      ],
-      Dining: [
-        /restaurant/i, /cafe/i, /coffee/i, /takeaway/i, /food delivery/i,
-        /just eat/i, /deliveroo/i, /mcdonalds/i, /burger/i
-      ],
-      Shopping: [
-        /amazon/i, /shop/i, /store/i, /retail/i, /clothing/i, /fashion/i,
-        /penneys/i, /primark/i, /tk maxx/i, /zara/i, /h&m/i
-      ],
-      Entertainment: [
-        /cinema/i, /movie/i, /theatre/i, /concert/i, /spotify/i, /netflix/i,
-        /disney/i, /entertainment/i, /game/i
-      ],
-      Transfers: [
-        /transfer/i, /sent/i, /received/i, /payment/i, /revolut/i
-      ],
-      "Top-ups": [
-        /top.?up/i, /topup/i, /added money/i, /loaded/i
-      ],
-      Services: [
-        /service/i, /subscription/i, /membership/i, /fee/i
-      ],
-      Bills: [
-        /bill/i, /utility/i, /electric/i, /gas/i, /water/i, /phone/i,
-        /mobile/i, /broadband/i, /internet/i, /rent/i
-      ]
-    };
-
-    for (const [category, patternList] of Object.entries(patterns)) {
-      if (patternList.some(pattern => pattern.test(description))) {
-        return category;
+  // Function to extract unique filenames from transaction descriptions
+  const extractFilenames = (transactions: RevolutTransactionDB[]): string[] => {
+    const fileNames = new Set<string>();
+    transactions.forEach(transaction => {
+      const match = transaction.description.match(/\(from file: (.+?)\)/);
+      if (match && match[1]) {
+        fileNames.add(match[1]);
       }
-    }
-
-    return "Other";
+    });
+    return Array.from(fileNames);
   };
 
   // Fetch existing transactions and extract filenames
@@ -78,29 +43,20 @@ export default function RevolutImport() {
 
       const { data, error } = await supabase
         .from('revolut_transactions')
-        .select('description')
-        .eq('profile_id', user.id);
-
-      if (error) throw error;
-      
-      // Extract unique filenames from descriptions
-      const fileNames = new Set(data?.map(t => {
-        // Extract filename if it's in the description
-        const match = t.description.match(/from file: (.+\.csv)/i);
-        return match ? match[1] : null;
-      }).filter(Boolean));
-      
-      setExistingFiles(Array.from(fileNames));
-      
-      // Fetch all transactions for display
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('revolut_transactions')
         .select('*')
         .eq('profile_id', user.id)
         .order('date', { ascending: false });
 
-      if (transactionsError) throw transactionsError;
-      setTransactions(transactionsData || []);
+      if (error) throw error;
+
+      const transactions = data as RevolutTransactionDB[];
+      setTransactions(transactions);
+      
+      // Extract and set existing filenames
+      const filenames = extractFilenames(transactions);
+      console.log("Existing files found:", filenames);
+      setExistingFiles(filenames);
+      
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast({
@@ -189,6 +145,53 @@ export default function RevolutImport() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Function to categorize transactions based on description patterns
+  const categorizeTransaction = (description: string): string => {
+    const patterns = {
+      Groceries: [
+        /tesco/i, /lidl/i, /aldi/i, /supervalu/i, /dunnes/i, /spar/i,
+        /centra/i, /grocery/i, /food/i, /market/i
+      ],
+      Transportation: [
+        /dublin bus/i, /irish rail/i, /leap/i, /taxi/i, /uber/i, /transport/i,
+        /bus/i, /train/i, /luas/i, /dart/i
+      ],
+      Dining: [
+        /restaurant/i, /cafe/i, /coffee/i, /takeaway/i, /food delivery/i,
+        /just eat/i, /deliveroo/i, /mcdonalds/i, /burger/i
+      ],
+      Shopping: [
+        /amazon/i, /shop/i, /store/i, /retail/i, /clothing/i, /fashion/i,
+        /penneys/i, /primark/i, /tk maxx/i, /zara/i, /h&m/i
+      ],
+      Entertainment: [
+        /cinema/i, /movie/i, /theatre/i, /concert/i, /spotify/i, /netflix/i,
+        /disney/i, /entertainment/i, /game/i
+      ],
+      Transfers: [
+        /transfer/i, /sent/i, /received/i, /payment/i, /revolut/i
+      ],
+      "Top-ups": [
+        /top.?up/i, /topup/i, /added money/i, /loaded/i
+      ],
+      Services: [
+        /service/i, /subscription/i, /membership/i, /fee/i
+      ],
+      Bills: [
+        /bill/i, /utility/i, /electric/i, /gas/i, /water/i, /phone/i,
+        /mobile/i, /broadband/i, /internet/i, /rent/i
+      ]
+    };
+
+    for (const [category, patternList] of Object.entries(patterns)) {
+      if (patternList.some(pattern => pattern.test(description))) {
+        return category;
+      }
+    }
+
+    return "Other";
   };
 
   return (
