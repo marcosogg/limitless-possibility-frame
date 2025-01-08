@@ -102,115 +102,149 @@ export default function RevolutImport() {
     fetchTransactions();
   }, []);
 
-  const processFile = async (file: File) => {
-    setIsProcessing(true);
-    try {
-      const text = await file.text();
-      const rows = text.split('\n');
-      const header = rows[0].split(',');
-      const expectedColumns = 10;
+  // File: src/pages/RevolutImport.tsx
+// Block: processFile function - Handle paired "To EUR Holidays" transactions
 
-      if (header.length !== expectedColumns) {
-        throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
-      }
+const processFile = async (file: File) => {
+  setIsProcessing(true);
+  try {
+    const text = await file.text();
+    const rows = text.split('\n');
+    const header = rows[0].split(',');
+    const expectedColumns = 10;
 
-      // Get user ID for database insertion
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('Failed to get user ID');
-      }
-
-      // Create a Set of existing transaction keys for faster lookup
-      const existingTransactionKeys = new Set(
-        transactions.map((t) => {
-          const date = new Date(t.date).toISOString().split('T')[0]; // Get just the date part
-          return `${date}-${t.description}-${t.amount}`;
-        })
-      );
-
-      console.log('Existing transaction keys:', existingTransactionKeys);
-
-      // Process and filter transactions
-      const processedTransactions = rows
-        .slice(1)
-        .filter(row => row.trim())
-        .map(row => row.split(','))
-        .filter(values => values[8].trim() === 'COMPLETED')
-        .map((values) => {
-          try {
-            const parsedDate = parse(
-              values[3].trim(),
-              'yyyy-MM-dd HH:mm:ss',
-              new Date()
-            );
-
-            const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
-            const description = values[4].trim();
-            const category = categorizeTransaction(description);
-
-            return {
-              date: parsedDate.toISOString(),
-              description: description,
-              amount: amount,
-              currency: values[7].trim(),
-              category: category,
-              profile_id: user.id
-            };
-          } catch (error) {
-            console.error('Error processing row:', error);
-            return null;
-          }
-        })
-        .filter((t): t is RevolutTransactionDB => t !== null);
-
-      // Filter out duplicates
-      const newTransactions = processedTransactions.filter((t) => {
-        const date = new Date(t.date).toISOString().split('T')[0]; // Get just the date part
-        const transactionKey = `${date}-${t.description}-${t.amount}`;
-        const isDuplicate = existingTransactionKeys.has(transactionKey);
-        console.log('Checking transaction:', transactionKey, 'isDuplicate:', isDuplicate);
-        return !isDuplicate;
-      });
-
-      console.log('Processed transactions:', processedTransactions.length);
-      console.log('New transactions:', newTransactions.length);
-
-      if (newTransactions.length === 0) {
-        toast({
-          title: "No new transactions",
-          description: "All transactions from this file have already been imported.",
-          variant: "destructive"
-        });
-        return; // Exit early if no new transactions
-      }
-
-      if (newTransactions.length < processedTransactions.length) {
-        const duplicateCount = processedTransactions.length - newTransactions.length;
-        toast({
-          title: "Duplicate transactions found",
-          description: `${duplicateCount} duplicate transactions were found and will be skipped. Importing ${newTransactions.length} new transactions.`,
-        });
-      }
-
-      // Set the parsed transactions to the preview state
-      setPreviewTransactions(newTransactions);
-
-      toast({
-        title: "Preview Ready",
-        description: `${newTransactions.length} new transactions ready for review.`,
-      });
-
-    } catch (error: any) {
-      console.error('Error processing file:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to process the file",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
+    if (header.length !== expectedColumns) {
+      throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
     }
-  };
+
+    // Get user ID for database insertion
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Failed to get user ID');
+    }
+
+    // Create a Set of existing transaction keys for faster lookup
+    const existingTransactionKeys = new Set(
+      transactions.map((t) => {
+        const date = new Date(t.date).toISOString().split('T')[0]; // Get just the date part
+        // Use only date, description, and amount for the key
+        return `${date}-${t.description}-${t.amount}`;
+      })
+    );
+
+    console.log('Existing transaction keys:', existingTransactionKeys);
+
+    // Process and filter transactions
+    const processedTransactions = rows
+      .slice(1)
+      .filter(row => row.trim())
+      .map(row => row.split(','))
+      .filter(values => values[8].trim() === 'COMPLETED')
+      .map((values) => {
+        try {
+          const parsedDate = parse(
+            values[3].trim(),
+            'yyyy-MM-dd HH:mm:ss',
+            new Date()
+          );
+
+          const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
+          const description = values[4].trim();
+          const category = categorizeTransaction(description);
+
+          return {
+            date: parsedDate.toISOString(),
+            description: description,
+            amount: amount,
+            currency: values[7].trim(),
+            category: category,
+            profile_id: user.id
+          };
+        } catch (error) {
+          console.error('Error processing row:', error);
+          return null;
+        }
+      })
+      .filter((t): t is RevolutTransactionDB => t !== null);
+
+    // Filter out duplicates, considering "To EUR Holidays" pairs
+    const newTransactions: RevolutTransactionDB[] = [];
+    for (let i = 0; i < processedTransactions.length; i++) {
+      const t = processedTransactions[i];
+      const date = new Date(t.date).toISOString().split('T')[0];
+      const transactionKey = `${date}-${t.description}-${t.amount}`;
+
+      if (existingTransactionKeys.has(transactionKey)) {
+        console.log('Skipping existing transaction:', transactionKey);
+        continue; // Skip if already exists
+      }
+
+      // Special handling for "To EUR Holidays" pairs
+      if (t.description === 'To EUR Holidays') {
+        const pairedTransaction = processedTransactions[i + 1];
+        if (
+          pairedTransaction &&
+          pairedTransaction.description === 'To EUR Holidays' &&
+          pairedTransaction.amount === -t.amount
+        ) {
+          // Found a matching pair, add both to newTransactions, but only if neither is already in existingTransactions
+          const pairedTransactionKey = `${new Date(pairedTransaction.date).toISOString().split('T')[0]}-${pairedTransaction.description}-${pairedTransaction.amount}`;
+          if (!existingTransactionKeys.has(transactionKey) && !existingTransactionKeys.has(pairedTransactionKey)) {
+            newTransactions.push(t);
+            newTransactions.push(pairedTransaction);
+          }
+          i++; // Skip the next transaction as it's part of the pair
+          continue;
+        }
+      }
+
+      // If not a "To EUR Holidays" pair, or no matching pair found, add to newTransactions if not a duplicate
+      if (!existingTransactionKeys.has(transactionKey)) {
+        newTransactions.push(t);
+      }
+    }
+
+    console.log('Processed transactions:', processedTransactions.length);
+    console.log('New transactions:', newTransactions.length);
+
+    if (newTransactions.length === 0) {
+      toast({
+        title: "No new transactions",
+        description: "All transactions from this file have already been imported.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+      return;
+    }
+
+    if (newTransactions.length < processedTransactions.length) {
+      const duplicateCount = processedTransactions.length - newTransactions.length;
+      toast({
+        title: "Duplicate transactions found",
+        description: `${duplicateCount} duplicate transactions were found and will be skipped. Importing ${newTransactions.length} new transactions.`,
+      });
+    }
+
+    // Set the parsed transactions to the preview state
+    setPreviewTransactions(newTransactions);
+
+    toast({
+      title: "Preview Ready",
+      description: `Parsed ${newTransactions.length} new transactions. Please review before saving.`,
+    });
+
+  } catch (error: any) {
+    console.error('Error processing file:', error);
+    toast({
+      title: "Error",
+      description: error.message || "Failed to process the file",
+      variant: "destructive",
+    });
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   const handleConfirmImport = async () => {
     setIsProcessing(true);
