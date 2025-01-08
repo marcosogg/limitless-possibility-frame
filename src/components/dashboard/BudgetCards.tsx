@@ -27,19 +27,22 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
   }, [budget]);
 
   const handleSpentChange = (spentKey: string, value: string) => {
-    const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue < 0) {
-      toast({
-        title: "Invalid Input",
-        description: "Please enter a valid positive number.",
-        variant: "destructive",
-      });
-      return;
+    // Only validate if the value is not empty
+    if (value !== "") {
+      const numValue = parseFloat(value);
+      if (isNaN(numValue) || numValue < 0) {
+        toast({
+          title: "Invalid Input",
+          description: "Please enter a valid positive number.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setEditedBudget(prev => ({
+        ...prev,
+        [spentKey]: numValue
+      }));
     }
-    setEditedBudget(prev => ({
-      ...prev,
-      [spentKey]: numValue
-    }));
   };
 
   const handleSave = async () => {
@@ -125,7 +128,7 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
                 spent={Number(editedBudget[spentKey as keyof Budget])}
                 planned={Number(editedBudget[plannedKey as keyof Budget])}
                 isEditing={isEditing}
-                onSpentChange={(value) => handleSpentChange(spentKey, value)}
+                onSpentChange={handleSpentChange}
               />
             ))}
             <div className="pt-4 border-t">

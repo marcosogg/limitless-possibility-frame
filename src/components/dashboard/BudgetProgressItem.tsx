@@ -26,6 +26,12 @@ export function BudgetProgressItem({
   const isOverspent = spent > planned;
   const formattedRemaining = formatCurrency(Math.abs(remaining));
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const spentKey = name.toLowerCase().replace(/\s+/g, '_') + '_spent';
+    onSpentChange?.(spentKey, value);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -36,8 +42,10 @@ export function BudgetProgressItem({
         {isEditing ? (
           <Input
             type="number"
-            value={String(spent)}
-            onChange={(e) => onSpentChange?.(name.toLowerCase().replace(/\s+/g, '_') + '_spent', e.target.value)}
+            min="0"
+            step="0.01"
+            value={spent.toString()}
+            onChange={handleInputChange}
             className="w-32 text-right"
             aria-label={`Enter spent amount for ${name}`}
           />
