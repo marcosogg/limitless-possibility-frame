@@ -28,6 +28,7 @@ import { MonthYearFields } from "./form-fields/MonthYearFields";
 import { IncomeFields } from "./form-fields/IncomeFields";
 import { ExpenseFields } from "./form-fields/ExpenseFields";
 import { CATEGORIES } from "@/constants/budget";
+import { useState } from "react";
 
 const formSchema = z.object({
   month: z.string(),
@@ -77,6 +78,7 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
     defaultValues: getDefaultValues(defaultMonth, defaultYear),
   });
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const copyFromExistingBudget = async (sourceMonth: string, sourceYear: string) => {
     try {
@@ -106,6 +108,7 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
         form.setValue(category.plannedKey as any, existingBudget[category.plannedKey]);
       });
 
+      setDialogOpen(false);
       toast({
         title: "Budget copied",
         description: `Budget from ${sourceMonth}/${sourceYear} has been copied`,
@@ -130,7 +133,7 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
               Plan your monthly budget by setting income and expense targets.
             </CardDescription>
           </div>
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Copy className="h-4 w-4" />
@@ -147,7 +150,7 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
                 </DialogHeader>
                 <MonthYearFields form={form} isCopyDialog={true} onCopySubmit={copyFromExistingBudget} />
                 <DialogFooter>
-                  <Button variant="outline" type="button" onClick={() => document.querySelector('dialog')?.close()}>
+                  <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
                 </DialogFooter>
