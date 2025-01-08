@@ -174,60 +174,118 @@ export default function RevolutImport() {
     });
   };
 
-  const processFile = async (file: File) => {
-    setIsProcessing(true);
-    try {
-      const text = await file.text();
-      const rows = text.split('\n');
-      
-      // Validate CSV structure
-      if (!isValidCSVFormat(rows)) {
-        throw new Error('Invalid CSV format');
-      }
+  // src/pages/RevolutImport.tsx
 
-      // Get user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+const processFile = async (file: File) => {
+  setIsProcessing(true);
+  try {
+    const text = await file.text();
+    console.log('Raw CSV first few rows:', 
+      text.split('\n')
+        .slice(0, 3)
+        .map(row => row.trim())
+    );
+    const rows = text.split('\n');
+    
+    // Get user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
-      // Process transactions
-      const processedTransactions = parseTransactions(rows, user.id);
-      console.log('Processed transactions:', processedTransactions.length);
-      
-      // Check for duplicates in database
-      const newTransactions = await filterDuplicates(processedTransactions);
+    // Process transactions
+    const processedTransactions = rows
+      .slice(1) // Skip header
+      .filter(row => row.trim()) // Remove empty rows
+      .map(row => {
+        try {
+          const values = row.split(',');
+          
+          // Only process COMPLETED transactions
+          if (values[8].trim() !== 'COMPLETED') {
+            return null;
+          }
 
-      if (newTransactions.length === 0) {
-        toast({
-          title: "No new transactions",
-          description: "All transactions from this file have already been imported.",
-          variant: "destructive"
-        });
-        return;
-      }
+          // Parse the completed date (values[3])
+          const dateStr = values[3].trim();
+          let parsedDate: Date;
 
-      // Set preview
-      setPreviewTransactions(newTransactions);
+          try {
+            // First, try parsing with date-fns
+            parsedDate = parse(dateStr, 'yyyy-MM-dd HH:mm:ss', new Date());
+            
+            // Validate the parsed date
+            if (isNaN(parsedDate.getTime())) {
+              // If first format fails, try alternative format
+              parsedDate = parse(dateStr, 'dd/MM/yyyy HH:mm:ss', new Date());
+            }
 
-      // Show summary
-      const duplicateCount = processedTransactions.length - newTransactions.length;
-      if (duplicateCount > 0) {
-        toast({
-          title: "Duplicate transactions found",
-          description: `${duplicateCount} duplicate transactions were found and will be skipped. Importing ${newTransactions.length} new transactions.`,
-        });
-      } else {
-        toast({
-          title: "Preview Ready",
-          description: `Found ${newTransactions.length} new transactions to import.`,
-        });
-      }
+            // Final validation
+            if (isNaN(parsedDate.getTime())) {
+              console.error('Invalid date format:', dateStr);
+              return null;
+            }
+          } catch (dateError) {
+            console.error('Date parsing error:', dateError, 'for date string:', dateStr);
+            return null;
+          }
 
-    } catch (error) {
-      handleError(error);
-    } finally {
+          // Parse amount
+          const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
+          
+          // Skip non-negative amounts
+          if (amount >= 0) {
+            return null;
+          }
+
+          const description = values[4].trim();
+          const category = categorizeTransaction(description);
+
+          return {
+            date: parsedDate.toISOString(),
+            description: description,
+            amount: amount,
+            currency: values[7].trim(),
+            category: category,
+            profile_id: user.id
+          };
+        } catch (error) {
+          console.error('Error processing row:', error, 'Row:', row);
+          return null;
+        }
+      })
+      .filter((t): t is RevolutTransactionDB => t !== null);
+
+    console.log('Processed transactions:', processedTransactions.length);
+
+    if (processedTransactions.length === 0) {
+      toast({
+        title: "No valid transactions",
+        description: "No valid transactions were found in the file.",
+        variant: "destructive"
+      });
       setIsProcessing(false);
+      return;
     }
-  };
+
+    // Set preview
+    setPreviewTransactions(processedTransactions);
+
+    toast({
+      title: "Preview Ready",
+      description: `Found ${processedTransactions.length} transactions to import.`,
+    });
+
+  } catch (error) {
+    console.error('Error processing file:', error);
+    toast({
+      title: "Error",
+      description: error.message || "Failed to process the file",
+      variant: "destructive",
+    });
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   const handleConfirmImport = async () => {
     setIsProcessing(true);
