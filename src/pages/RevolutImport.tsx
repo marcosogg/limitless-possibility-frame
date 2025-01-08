@@ -5,9 +5,10 @@ import { parse } from "date-fns";
 import { FileUploadZone } from "@/components/revolut-import/FileUploadZone";
 import { TransactionsTable } from "@/components/revolut-import/TransactionsTable";
 import { supabase } from "@/integrations/supabase/client";
-import type { RevolutTransactionDB } from "@/types/revolut";
+import type { RevolutTransactionDB, RevolutCSVRow } from "@/types/revolut";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { parseRevolutCSV, createTransactionKey } from "@/utils/revolut";
 
 export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -104,13 +105,9 @@ export default function RevolutImport() {
     setIsProcessing(true);
     try {
       const text = await file.text();
-      const rows = text.split('\n');
-      const header = rows[0].split(',');
-      const expectedColumns = 10;
-
-      if (header.length !== expectedColumns) {
-        throw new Error(`Invalid CSV format: Expected ${expectedColumns} columns but found ${header.length}`);
-      }
+      
+      // Parse CSV using our utility function
+      const csvRows = parseRevolutCSV(text);
 
       // Get user ID for database insertion
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -120,44 +117,37 @@ export default function RevolutImport() {
 
       // Create a Set of existing transaction keys for faster lookup
       const existingTransactionKeys = new Set(
-        transactions.map((t) => {
-          const date = new Date(t.date).toISOString();
-          return `${date}-${t.description}-${t.amount}`;
-        })
+        transactions.map((t) => createTransactionKey(t))
       );
 
       console.log('Existing transaction keys:', existingTransactionKeys);
 
-      // Process, filter, and categorize transactions
-      const processedTransactions = rows
-        .slice(1)
-        .filter(row => row.trim())
-        .map(row => row.split(','))
-        .filter(values => values[1].trim() === 'Current') // Filter by 'Product' column
-        .filter(values => values[8].trim() === 'COMPLETED') // Filter by 'State' column
-        .map((values) => {
+      // Process and filter transactions
+      const processedTransactions = csvRows
+        .filter(row => row.state === 'COMPLETED') // Filter by 'State' column
+        .map((row) => {
           try {
             const parsedDate = parse(
-              values[3].trim(),
-              'yyyy-MM-dd HH:mm:ss',
+              row.completedDate,
+              'dd/MM/yyyy HH:mm:ss',
               new Date()
             );
 
-            const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
+            const amount = parseFloat(row.amount.replace(/[^\d.-]/g, ''));
 
             // Skip rows where the amount is not negative
             if (amount >= 0) {
               return null;
             }
 
-            const description = values[4].trim();
+            const description = row.description;
             const category = categorizeTransaction(description);
 
             return {
               date: parsedDate.toISOString(),
               description: description,
               amount: amount,
-              currency: values[7].trim(),
+              currency: row.currency,
               category: category,
               profile_id: user.id
             };
@@ -172,7 +162,7 @@ export default function RevolutImport() {
       const newTransactions: RevolutTransactionDB[] = [];
       let duplicateCount = 0;
       for (const t of processedTransactions) {
-        const transactionKey = `${t.date}-${t.description}-${t.amount}`;
+        const transactionKey = createTransactionKey(t);
         if (existingTransactionKeys.has(transactionKey)) {
           duplicateCount++;
           console.log('Skipping duplicate transaction:', transactionKey);
