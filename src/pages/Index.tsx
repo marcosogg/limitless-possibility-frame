@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import { BudgetOverview } from "@/components/dashboard/BudgetOverview";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
@@ -17,10 +17,20 @@ import { formatCurrency } from "@/lib/utils";
 export default function Index() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [budget, setBudget] = useState<Budget | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Initialize with state from location or current date
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const state = location.state as { month?: number, year?: number } | null;
+    return state?.month || new Date().getMonth() + 1;
+  });
+  
+  const [selectedYear, setSelectedYear] = useState(() => {
+    const state = location.state as { month?: number, year?: number } | null;
+    return state?.year || new Date().getFullYear();
+  });
 
   const fetchBudget = async () => {
     try {
@@ -75,6 +85,12 @@ export default function Index() {
     setBudget(updatedBudget);
   };
 
+  const navigateToCreateBudget = () => {
+    navigate("/createbudget", {
+      state: { month: selectedMonth, year: selectedYear }
+    });
+  };
+
   const overspentCategories = budget
     ? CATEGORIES.filter(cat => budget[cat.spentKey as keyof Budget] > budget[cat.plannedKey as keyof Budget])
     : [];
@@ -124,7 +140,7 @@ export default function Index() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-lg mb-4">No budget found for this month</p>
               <Button
-                onClick={() => navigate("/createbudget")}
+                onClick={navigateToCreateBudget}
                 className="bg-white text-indigo-600 hover:bg-gray-100"
               >
                 Create Budget

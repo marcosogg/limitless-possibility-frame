@@ -1,4 +1,3 @@
-// src/components/budget/BudgetForm.tsx
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -54,12 +53,14 @@ const formSchema = z.object({
 
 interface BudgetFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
+  defaultMonth?: number;
+  defaultYear?: number;
 }
 
-const getDefaultValues = () => {
+const getDefaultValues = (defaultMonth?: number, defaultYear?: number) => {
   const defaultValues = {
-    month: "1",
-    year: "2025",
+    month: defaultMonth?.toString() || "1",
+    year: defaultYear?.toString() || new Date().getFullYear().toString(),
     salary: 2700,
     bonus: 0,
   };
@@ -71,10 +72,10 @@ const getDefaultValues = () => {
   return defaultValues;
 };
 
-export function BudgetForm({ onSubmit }: BudgetFormProps) {
+export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(defaultMonth, defaultYear),
   });
 
   return (

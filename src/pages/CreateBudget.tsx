@@ -1,16 +1,21 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BudgetForm } from "@/components/budget/BudgetForm";
-import type { Budget } from "@/types/budget";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function CreateBudget() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get month and year from location state or use current date
+  const state = location.state as { month?: number; year?: number } | null;
+  const defaultMonth = state?.month || new Date().getMonth() + 1;
+  const defaultYear = state?.year || new Date().getFullYear();
 
   const saveBudget = async (budgetData: any) => {
     try {
@@ -36,7 +41,13 @@ export default function CreateBudget() {
         description: "Budget saved successfully",
       });
 
-      navigate("/");
+      // Navigate back to dashboard with the same month and year
+      navigate("/", {
+        state: {
+          month: parseInt(budgetData.month),
+          year: parseInt(budgetData.year)
+        }
+      });
     } catch (error: any) {
       console.error("Error saving budget:", error);
       toast({
@@ -58,7 +69,7 @@ export default function CreateBudget() {
       <div className="max-w-4xl mx-auto space-y-6">
         <Card className="bg-white/10 backdrop-blur-lg">
           <CardContent className="p-6">
-            <BudgetForm onSubmit={handleSubmit} />
+            <BudgetForm onSubmit={handleSubmit} defaultMonth={defaultMonth} defaultYear={defaultYear} />
           </CardContent>
         </Card>
         <div className="flex justify-end">
