@@ -5,7 +5,7 @@ import { parse } from "date-fns";
 import { FileUploadZone } from "@/components/revolut-import/FileUploadZone";
 import { TransactionsTable } from "@/components/revolut-import/TransactionsTable";
 import { supabase } from "@/integrations/supabase/client";
-import type { RevolutTransaction, RevolutTransactionDB } from "@/types/revolut";
+import type { RevolutTransactionDB } from "@/types/revolut";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -13,6 +13,7 @@ export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<RevolutTransactionDB[]>([]);
+  const [previewTransactions, setPreviewTransactions] = useState<RevolutTransactionDB[]>([]);
   const navigate = useNavigate();
 
   // Function to categorize transactions based on description patterns
@@ -150,28 +151,49 @@ export default function RevolutImport() {
         })
         .filter((t): t is RevolutTransactionDB => t !== null);
 
-      // Insert into database
-      const { error: insertError } = await supabase
-        .from('revolut_transactions')
-        .insert(processedTransactions);
-
-      if (insertError) {
-        throw insertError;
-      }
-
-      // Refresh the transactions list
-      await fetchTransactions();
+      // Set the parsed transactions to the preview state
+      setPreviewTransactions(processedTransactions);
 
       toast({
-        title: "Success",
-        description: `Successfully imported ${processedTransactions.length} transactions`
+        title: "Preview",
+        description: `Parsed ${processedTransactions.length} transactions. Please review before saving.`,
       });
+
+      return; // Stop execution here for now
 
     } catch (error: any) {
       console.error('Error processing file:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to process the file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    setIsProcessing(true);
+    try {
+      const { error: insertError } = await supabase
+        .from('revolut_transactions')
+        .insert(previewTransactions);
+
+      if (insertError) throw insertError;
+
+      setPreviewTransactions([]); // Clear the preview
+      await fetchTransactions(); // Refresh the transactions list
+
+      toast({
+        title: "Success",
+        description: "Transactions imported successfully",
+      });
+    } catch (error: any) {
+      console.error('Error importing transactions:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to import transactions",
         variant: "destructive",
       });
     } finally {
@@ -196,8 +218,12 @@ export default function RevolutImport() {
         onFileSelect={processFile}
       />
 
+      {previewTransactions.length > 0 && (
+        <TransactionsTable transactions={previewTransactions} onConfirm={handleConfirmImport} />
+      )}
+
       {transactions.length > 0 && (
-        <TransactionsTable transactions={transactions} />
+        <TransactionsTable transactions={transactions} onConfirm={() => {}} />
       )}
     </div>
   );
