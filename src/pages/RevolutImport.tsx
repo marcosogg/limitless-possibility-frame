@@ -159,8 +159,6 @@ export default function RevolutImport() {
         description: `Parsed ${processedTransactions.length} transactions. Please review before saving.`,
       });
 
-      return; // Stop execution here for now
-
     } catch (error: any) {
       console.error('Error processing file:', error);
       toast({
@@ -218,12 +216,14 @@ export default function RevolutImport() {
         onFileSelect={processFile}
       />
 
+      {/* Preview Table */}
       {previewTransactions.length > 0 && (
         <TransactionsTable transactions={previewTransactions} onConfirm={handleConfirmImport} />
       )}
 
-      {transactions.length > 0 && (
-        <TransactionsTable transactions={transactions} onConfirm={() => {}} />
+      {/* Existing Transactions Table (only if not previewing) */}
+      {previewTransactions.length === 0 && transactions.length > 0 && (
+        <TransactionsTable transactions={transactions} />
       )}
     </div>
   );

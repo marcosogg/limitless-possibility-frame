@@ -16,6 +16,7 @@ import type { RevolutTransactionDB } from "@/types/revolut";
 
 interface TransactionsTableProps {
   transactions: RevolutTransactionDB[];
+  onConfirm?: () => void; // Optional onConfirm prop
 }
 
 type SortConfig = {
@@ -23,7 +24,7 @@ type SortConfig = {
   direction: "asc" | "desc";
 } | null;
 
-export function TransactionsTable({ transactions }: TransactionsTableProps) {
+export function TransactionsTable({ transactions, onConfirm }: TransactionsTableProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [filters, setFilters] = useState({
     category: "All",
@@ -51,7 +52,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
     result = result.filter((transaction) => {
       const matchesCategory =
         filters.category === "All" || transaction.category === filters.category;
-      
+
       const matchesSearch = filters.searchTerm
         ? transaction.description.toLowerCase().includes(filters.searchTerm.toLowerCase())
         : true;
@@ -85,7 +86,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
   return (
     <div className="space-y-4">
       <TransactionFilters onFilterChange={setFilters} />
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -147,6 +148,10 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {onConfirm && (
+        <Button onClick={onConfirm}>Confirm Import</Button>
+      )}
     </div>
   );
 }
