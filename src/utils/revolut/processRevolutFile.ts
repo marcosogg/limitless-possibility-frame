@@ -24,13 +24,19 @@ export const processRevolutFile = async (file: File) => {
     .filter(values => values[8].trim() === 'COMPLETED')
     .map((values) => {
       try {
+        const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
+        
+        // Skip positive amounts (income) - only process negative amounts (expenses)
+        if (amount >= 0) {
+          return null;
+        }
+
         const parsedDate = parse(
           values[3].trim(),
           'yyyy-MM-dd HH:mm:ss',
           new Date()
         );
 
-        const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
         const description = `${values[4].trim()} (from file: ${file.name})`;
         const category = categorizeTransaction(description);
 
