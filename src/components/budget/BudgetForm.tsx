@@ -15,6 +15,7 @@ import { Form } from "@/components/ui/form";
 import { MonthYearFields } from "./form-fields/MonthYearFields";
 import { IncomeFields } from "./form-fields/IncomeFields";
 import { ExpenseFields } from "./form-fields/ExpenseFields";
+import { CATEGORIES } from "@/constants/budget";
 
 const formSchema = z.object({
   month: z.string(),
