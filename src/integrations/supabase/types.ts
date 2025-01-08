@@ -1,4 +1,3 @@
-// src/integrations/supabase/types.ts
 export type Json =
   | string
   | number
@@ -53,24 +52,14 @@ export type Database = {
         Row: {
           bonus: number
           created_at: string | null
-          dining_out: number
-          dining_out_spent: number
-          education: number
-          education_spent: number
           entertainment: number
           entertainment_spent: number
-          gifts_donations: number
-          gifts_donations_spent: number
           groceries: number
           groceries_spent: number
-          health_fitness: number
-          health_fitness_spent: number
           id: string
           miscellaneous: number
           miscellaneous_spent: number
           month: number
-          personal_care: number
-          personal_care_spent: number
           rent: number
           rent_spent: number
           salary: number
@@ -80,8 +69,6 @@ export type Database = {
           shopping_spent: number
           transport: number
           transport_spent: number
-          travel: number
-          travel_spent: number
           user_id: string
           utilities: number
           utilities_spent: number
@@ -90,24 +77,14 @@ export type Database = {
         Insert: {
           bonus?: number
           created_at?: string | null
-          dining_out?: number
-          dining_out_spent?: number
-          education?: number
-          education_spent?: number
           entertainment?: number
           entertainment_spent?: number
-          gifts_donations?: number
-          gifts_donations_spent?: number
           groceries?: number
           groceries_spent?: number
-          health_fitness?: number
-          health_fitness_spent?: number
           id?: string
           miscellaneous?: number
           miscellaneous_spent?: number
           month: number
-          personal_care?: number
-          personal_care_spent?: number
           rent?: number
           rent_spent?: number
           salary?: number
@@ -117,8 +94,6 @@ export type Database = {
           shopping_spent?: number
           transport?: number
           transport_spent?: number
-          travel?: number
-          travel_spent?: number
           user_id: string
           utilities?: number
           utilities_spent?: number
@@ -127,24 +102,14 @@ export type Database = {
         Update: {
           bonus?: number
           created_at?: string | null
-          dining_out?: number
-          dining_out_spent?: number
-          education?: number
-          education_spent?: number
           entertainment?: number
           entertainment_spent?: number
-          gifts_donations?: number
-          gifts_donations_spent?: number
           groceries?: number
           groceries_spent?: number
-          health_fitness?: number
-          health_fitness_spent?: number
           id?: string
           miscellaneous?: number
           miscellaneous_spent?: number
           month?: number
-          personal_care?: number
-          personal_care_spent?: number
           rent?: number
           rent_spent?: number
           salary?: number
@@ -154,8 +119,6 @@ export type Database = {
           shopping_spent?: number
           transport?: number
           transport_spent?: number
-          travel?: number
-          travel_spent?: number
           user_id?: string
           utilities?: number
           utilities_spent?: number
