@@ -1,4 +1,3 @@
-// src/utils/budgetCalculations.ts
 import { Budget } from "@/types/budget";
 import { CATEGORIES } from "@/constants/budget";
 

@@ -120,7 +120,7 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="space-y-4">
-            {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => (
+          {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => (
               <BudgetProgressItem
                 key={name}
                 name={name}
