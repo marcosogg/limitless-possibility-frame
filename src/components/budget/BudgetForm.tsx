@@ -1,6 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +14,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { MonthYearFields } from "./form-fields/MonthYearFields";
 import { IncomeFields } from "./form-fields/IncomeFields";
@@ -64,14 +76,83 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
     resolver: zodResolver(formSchema),
     defaultValues: getDefaultValues(defaultMonth, defaultYear),
   });
+  const { toast } = useToast();
+
+  const copyFromExistingBudget = async (sourceMonth: string, sourceYear: string) => {
+    try {
+      const { data: existingBudget, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('month', parseInt(sourceMonth))
+        .eq('year', parseInt(sourceYear))
+        .single();
+
+      if (error) throw error;
+
+      if (!existingBudget) {
+        toast({
+          title: "No budget found",
+          description: `No budget found for ${sourceMonth}/${sourceYear}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update form values with existing budget data
+      form.setValue('salary', existingBudget.salary);
+      form.setValue('bonus', existingBudget.bonus);
+
+      CATEGORIES.forEach((category) => {
+        form.setValue(category.plannedKey as any, existingBudget[category.plannedKey]);
+      });
+
+      toast({
+        title: "Budget copied",
+        description: `Budget from ${sourceMonth}/${sourceYear} has been copied`,
+      });
+    } catch (error) {
+      console.error('Error copying budget:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy budget data",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl">Create Monthly Budget</CardTitle>
-        <CardDescription>
-          Plan your monthly budget by setting income and expense targets.
-        </CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-2xl">Create Monthly Budget</CardTitle>
+            <CardDescription>
+              Plan your monthly budget by setting income and expense targets.
+            </CardDescription>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Copy className="h-4 w-4" />
+                Copy from Existing
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Copy from Existing Budget</DialogTitle>
+                <DialogDescription>
+                  Select the month and year to copy the budget from.
+                </DialogDescription>
+              </DialogHeader>
+              <MonthYearFields form={form} isCopyDialog={true} onCopySubmit={copyFromExistingBudget} />
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => document.querySelector('dialog')?.close()}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
