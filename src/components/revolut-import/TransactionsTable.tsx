@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import transactionCategories from "@/constants/transactionCategories.json";
+import transactionCategories from "../../constants/transactionCategories.json";
 
 interface TransactionsTableProps {
   transactions: RevolutTransactionDB[];
