@@ -5,16 +5,15 @@ import { parse } from "date-fns";
 import { FileUploadZone } from "@/components/revolut-import/FileUploadZone";
 import { TransactionsTable } from "@/components/revolut-import/TransactionsTable";
 import { supabase } from "@/integrations/supabase/client";
-import type { RevolutTransactionDB, RevolutCSVRow } from "@/types/revolut";
+import type { RevolutTransactionDB } from "@/types/revolut";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { parseRevolutCSV, createTransactionKey } from "@/utils/revolut";
 
 export default function RevolutImport() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
   const [transactions, setTransactions] = useState<RevolutTransactionDB[]>([]);
   const [previewTransactions, setPreviewTransactions] = useState<RevolutTransactionDB[]>([]);
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Function to categorize transactions based on description patterns
@@ -101,79 +100,101 @@ export default function RevolutImport() {
     fetchTransactions();
   }, []);
 
+  const isValidCSVFormat = (rows: string[]): boolean => {
+    const header = rows[0].split(',');
+    return header.length === 10;
+  };
+
+  const parseTransactions = (rows: string[], userId: string): RevolutTransactionDB[] => {
+    return rows
+      .slice(1)
+      .filter(row => row.trim())
+      .map(row => row.split(','))
+      .filter(values => values[8].trim() === 'COMPLETED') // Filter by State
+      .map(values => {
+        try {
+          const amount = parseFloat(values[5].replace(/[^\d.-]/g, ''));
+          if (amount >= 0) return null; // Skip non-negative amounts
+
+          return {
+            date: parse(values[3].trim(), 'dd/MM/yyyy HH:mm:ss', new Date()).toISOString(),
+            description: values[4].trim(),
+            amount: amount,
+            currency: values[7].trim(),
+            category: categorizeTransaction(values[4].trim()),
+            profile_id: userId
+          };
+        } catch (error) {
+          console.error('Error processing row:', error);
+          return null;
+        }
+      })
+      .filter((t): t is RevolutTransactionDB => t !== null);
+  };
+
+  const filterDuplicates = async (transactions: RevolutTransactionDB[]): Promise<RevolutTransactionDB[]> => {
+    const newTransactions: RevolutTransactionDB[] = [];
+    let duplicateCount = 0;
+
+    for (const transaction of transactions) {
+      // Check if transaction exists in database
+      const { data } = await supabase
+        .from('revolut_transactions')
+        .select('id')
+        .eq('date', transaction.date)
+        .eq('description', transaction.description)
+        .eq('amount', transaction.amount)
+        .single();
+
+      if (!data) {
+        newTransactions.push(transaction);
+      } else {
+        duplicateCount++;
+        console.log('Skipping duplicate transaction:', {
+          date: transaction.date,
+          description: transaction.description,
+          amount: transaction.amount
+        });
+      }
+    }
+
+    console.log('Total transactions processed:', transactions.length);
+    console.log('New transactions:', newTransactions.length);
+    console.log('Duplicate transactions:', duplicateCount);
+
+    return newTransactions;
+  };
+
+  const handleError = (error: any) => {
+    console.error('Error:', error);
+    toast({
+      title: "Error",
+      description: error.message || "An error occurred while processing the file",
+      variant: "destructive",
+    });
+  };
+
   const processFile = async (file: File) => {
     setIsProcessing(true);
     try {
       const text = await file.text();
+      const rows = text.split('\n');
       
-      // Parse CSV using our utility function
-      const csvRows = parseRevolutCSV(text);
-
-      // Get user ID for database insertion
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('Failed to get user ID');
+      // Validate CSV structure
+      if (!isValidCSVFormat(rows)) {
+        throw new Error('Invalid CSV format');
       }
 
-      // Create a Set of existing transaction keys for faster lookup
-      const existingTransactionKeys = new Set(
-        transactions.map((t) => createTransactionKey(t))
-      );
+      // Get user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-      console.log('Existing transaction keys:', existingTransactionKeys);
-
-      // Process and filter transactions
-      const processedTransactions = csvRows
-        .filter(row => row.state === 'COMPLETED') // Filter by 'State' column
-        .map((row) => {
-          try {
-            const parsedDate = parse(
-              row.completedDate,
-              'dd/MM/yyyy HH:mm:ss',
-              new Date()
-            );
-
-            const amount = parseFloat(row.amount.replace(/[^\d.-]/g, ''));
-
-            // Skip rows where the amount is not negative
-            if (amount >= 0) {
-              return null;
-            }
-
-            const description = row.description;
-            const category = categorizeTransaction(description);
-
-            return {
-              date: parsedDate.toISOString(),
-              description: description,
-              amount: amount,
-              currency: row.currency,
-              category: category,
-              profile_id: user.id
-            };
-          } catch (error) {
-            console.error('Error processing row:', error);
-            return null;
-          }
-        })
-        .filter((t): t is RevolutTransactionDB => t !== null);
-
-      // Filter out duplicates
-      const newTransactions: RevolutTransactionDB[] = [];
-      let duplicateCount = 0;
-      for (const t of processedTransactions) {
-        const transactionKey = createTransactionKey(t);
-        if (existingTransactionKeys.has(transactionKey)) {
-          duplicateCount++;
-          console.log('Skipping duplicate transaction:', transactionKey);
-        } else {
-          newTransactions.push(t);
-        }
-      }
-
+      // Process transactions
+      const processedTransactions = parseTransactions(rows, user.id);
       console.log('Processed transactions:', processedTransactions.length);
-      console.log('New transactions:', newTransactions.length);
-      console.log('Duplicate transactions:', duplicateCount);
+      
+      // Check for duplicates in database
+      const newTransactions = await filterDuplicates(processedTransactions);
 
       if (newTransactions.length === 0) {
         toast({
@@ -181,33 +202,28 @@ export default function RevolutImport() {
           description: "All transactions from this file have already been imported.",
           variant: "destructive"
         });
-        setIsProcessing(false);
-        return; // Exit early if no new transactions
+        return;
       }
 
-      if (newTransactions.length < processedTransactions.length) {
-        const duplicateCount = processedTransactions.length - newTransactions.length;
+      // Set preview
+      setPreviewTransactions(newTransactions);
+
+      // Show summary
+      const duplicateCount = processedTransactions.length - newTransactions.length;
+      if (duplicateCount > 0) {
         toast({
           title: "Duplicate transactions found",
           description: `${duplicateCount} duplicate transactions were found and will be skipped. Importing ${newTransactions.length} new transactions.`,
         });
+      } else {
+        toast({
+          title: "Preview Ready",
+          description: `Found ${newTransactions.length} new transactions to import.`,
+        });
       }
 
-      // Set the parsed transactions to the preview state
-      setPreviewTransactions(newTransactions);
-
-      toast({
-        title: "Preview Ready",
-        description: `Parsed ${newTransactions.length} new transactions. Please review before saving.`,
-      });
-
-    } catch (error: any) {
-      console.error('Error processing file:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to process the file",
-        variant: "destructive",
-      });
+    } catch (error) {
+      handleError(error);
     } finally {
       setIsProcessing(false);
     }
