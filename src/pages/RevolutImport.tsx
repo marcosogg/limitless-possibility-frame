@@ -120,6 +120,16 @@ export default function RevolutImport() {
         throw new Error('Failed to get user ID');
       }
 
+      // Create a Set of existing transaction keys for faster lookup
+      const existingTransactionKeys = new Set(
+        transactions.map((t) => {
+          const date = new Date(t.date).toISOString().split('T')[0]; // Get just the date part
+          return `${date}-${t.description}-${t.amount}`;
+        })
+      );
+
+      console.log('Existing transaction keys:', existingTransactionKeys);
+
       // Process and filter transactions
       const processedTransactions = rows
         .slice(1)
@@ -153,15 +163,17 @@ export default function RevolutImport() {
         })
         .filter((t): t is RevolutTransactionDB => t !== null);
 
-      // Check for duplicates before setting previewTransactions
-      const existingTransactions = new Set(
-        transactions.map((t) => `${t.date}-${t.description}-${t.amount}`)
-      );
-
+      // Filter out duplicates
       const newTransactions = processedTransactions.filter((t) => {
-        const transactionKey = `${t.date}-${t.description}-${t.amount}`;
-        return !existingTransactions.has(transactionKey);
+        const date = new Date(t.date).toISOString().split('T')[0]; // Get just the date part
+        const transactionKey = `${date}-${t.description}-${t.amount}`;
+        const isDuplicate = existingTransactionKeys.has(transactionKey);
+        console.log('Checking transaction:', transactionKey, 'isDuplicate:', isDuplicate);
+        return !isDuplicate;
       });
+
+      console.log('Processed transactions:', processedTransactions.length);
+      console.log('New transactions:', newTransactions.length);
 
       if (newTransactions.length === 0) {
         toast({
@@ -169,14 +181,14 @@ export default function RevolutImport() {
           description: "All transactions from this file have already been imported.",
           variant: "destructive"
         });
-        setIsProcessing(false);
-        return;
+        return; // Exit early if no new transactions
       }
 
       if (newTransactions.length < processedTransactions.length) {
+        const duplicateCount = processedTransactions.length - newTransactions.length;
         toast({
           title: "Duplicate transactions found",
-          description: "Some transactions from this file have already been imported. They will be skipped.",
+          description: `${duplicateCount} duplicate transactions were found and will be skipped. Importing ${newTransactions.length} new transactions.`,
         });
       }
 
@@ -184,8 +196,8 @@ export default function RevolutImport() {
       setPreviewTransactions(newTransactions);
 
       toast({
-        title: "Preview",
-        description: `Parsed ${newTransactions.length} new transactions. Please review before saving.`,
+        title: "Preview Ready",
+        description: `${newTransactions.length} new transactions ready for review.`,
       });
 
     } catch (error: any) {
