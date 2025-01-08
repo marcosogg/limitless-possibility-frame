@@ -138,18 +138,20 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Copy from Existing Budget</DialogTitle>
-                <DialogDescription>
-                  Select the month and year to copy the budget from.
-                </DialogDescription>
-              </DialogHeader>
-              <MonthYearFields form={form} isCopyDialog={true} onCopySubmit={copyFromExistingBudget} />
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => document.querySelector('dialog')?.close()}>
-                  Cancel
-                </Button>
-              </DialogFooter>
+              <Form {...form}>
+                <DialogHeader>
+                  <DialogTitle>Copy from Existing Budget</DialogTitle>
+                  <DialogDescription>
+                    Select the month and year to copy the budget from.
+                  </DialogDescription>
+                </DialogHeader>
+                <MonthYearFields form={form} isCopyDialog={true} onCopySubmit={copyFromExistingBudget} />
+                <DialogFooter>
+                  <Button variant="outline" type="button" onClick={() => document.querySelector('dialog')?.close()}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </Form>
             </DialogContent>
           </Dialog>
         </div>
