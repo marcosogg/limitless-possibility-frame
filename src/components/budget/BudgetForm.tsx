@@ -1,7 +1,8 @@
+// src/components/budget/BudgetForm.tsx
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { CalendarIcon, PiggyBank, Wallet } from 'lucide-react';
+import { PiggyBank, Wallet } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CATEGORIES } from "@/constants/budget";
 
 const formSchema = z.object({
   month: z.string(),
@@ -42,29 +44,37 @@ const formSchema = z.object({
   shopping: z.number(),
   miscellaneous: z.number(),
   savings: z.number(),
+  dining_out: z.number(),
+  health_fitness: z.number(),
+  personal_care: z.number(),
+  gifts_donations: z.number(),
+  travel: z.number(),
+  education: z.number(),
 });
 
 interface BudgetFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
 }
 
+const getDefaultValues = () => {
+  const defaultValues = {
+    month: "1",
+    year: "2025",
+    salary: 2700,
+    bonus: 0,
+  };
+
+  CATEGORIES.forEach((category) => {
+    defaultValues[category.plannedKey] = 0;
+  });
+
+  return defaultValues;
+};
+
 export function BudgetForm({ onSubmit }: BudgetFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      month: "1",
-      year: "2025",
-      salary: 2700,
-      bonus: 0,
-      rent: 1000,
-      utilities: 200,
-      groceries: 100,
-      transport: 40,
-      entertainment: 50,
-      shopping: 50,
-      miscellaneous: 50,
-      savings: 1000,
-    },
+    defaultValues: getDefaultValues(),
   });
 
   return (
@@ -182,134 +192,25 @@ export function BudgetForm({ onSubmit }: BudgetFormProps) {
                 <h3 className="text-lg font-semibold">Monthly Expenses</h3>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="rent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rent</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="utilities"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Utilities</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="groceries"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Groceries</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="transport"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transport</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="entertainment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Entertainment</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="shopping"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Shopping</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="miscellaneous"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Miscellaneous</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="savings"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Savings</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
-                          <Input {...field} type="number" className="pl-7" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {CATEGORIES.map((category) => (
+                  <FormField
+                    key={category.name}
+                    control={form.control}
+                    name={category.plannedKey as any}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{category.name}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2">€</span>
+                            <Input {...field} type="number" className="pl-7" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
               </div>
             </div>
           </form>

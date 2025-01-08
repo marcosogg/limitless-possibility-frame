@@ -1,3 +1,4 @@
+// src/components/dashboard/BudgetCards.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -35,9 +36,9 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
       });
       return;
     }
-    setEditedBudget(prev => ({
+    setEditedBudget((prev) => ({
       ...prev,
-      [`${category.toLowerCase()}_spent`]: numValue
+      [`${category.toLowerCase()}_spent`]: numValue,
     }));
   };
 
@@ -45,13 +46,16 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
     setIsSaving(true);
     try {
       const updates = Object.fromEntries(
-        CATEGORIES.map(cat => [cat.spentKey, Number(editedBudget[cat.spentKey as keyof Budget])])
+        CATEGORIES.map((cat) => [
+          cat.spentKey,
+          Number(editedBudget[cat.spentKey as keyof Budget]),
+        ])
       );
 
       const { error } = await supabase
-        .from('budgets')
+        .from("budgets")
         .update(updates)
-        .eq('id', budget.id);
+        .eq("id", budget.id);
 
       if (error) throw error;
 
@@ -76,25 +80,27 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <PlannedBudgetCard budget={budget} />
-      
+
       <Card className="bg-white shadow-sm">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-semibold text-gray-800">Current Status</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Current Status
+            </CardTitle>
             {!isEditing ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="bg-blue-50 text-blue-600 hover:bg-blue-100" 
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-blue-50 text-blue-600 hover:bg-blue-100"
                 onClick={() => setIsEditing(true)}
               >
                 Update Expenses
               </Button>
             ) : (
               <div className="space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setIsEditing(false);
                     setEditedBudget(budget);
@@ -111,11 +117,11 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="space-y-4">
-            {CATEGORIES.map(({ name, icon, plannedKey, spentKey }) => (
+            {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => (
               <BudgetProgressItem
                 key={name}
                 name={name}
-                Icon={icon}
+                Icon={Icon}
                 spent={Number(editedBudget[spentKey as keyof Budget])}
                 planned={Number(editedBudget[plannedKey as keyof Budget])}
                 isEditing={isEditing}
@@ -125,7 +131,9 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total Spent</span>
-                <span className="font-semibold">{formatCurrency(calculateTotalSpent(editedBudget))}</span>
+                <span className="font-semibold">
+                  {formatCurrency(calculateTotalSpent(editedBudget))}
+                </span>
               </div>
             </div>
           </div>

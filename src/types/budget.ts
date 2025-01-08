@@ -1,3 +1,4 @@
+// src/types/budget.ts
 export interface Budget {
   id: string;
   user_id: string;
@@ -22,6 +23,18 @@ export interface Budget {
   shopping_spent: number;
   miscellaneous_spent: number;
   savings_spent: number;
+  dining_out: number;
+  dining_out_spent: number;
+  health_fitness: number;
+  health_fitness_spent: number;
+  personal_care: number;
+  personal_care_spent: number;
+  gifts_donations: number;
+  gifts_donations_spent: number;
+  travel: number;
+  travel_spent: number;
+  education: number;
+  education_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;

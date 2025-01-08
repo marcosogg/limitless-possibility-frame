@@ -1,3 +1,4 @@
+// src/components/dashboard/PlannedBudgetCard.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CATEGORIES } from "@/constants/budget";
 import { Budget } from "@/types/budget";
