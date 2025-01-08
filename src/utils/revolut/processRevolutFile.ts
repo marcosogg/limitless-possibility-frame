@@ -70,7 +70,7 @@ const categorizeTransaction = (description: string): string => {
   const patterns = {
     "Groceries & Supermarkets": [
       /tesco/i, /lidl/i, /aldi/i, /supervalu/i, /dunnes/i, /spar/i,
-      /centra/i, /grocery/i, /food/i, /market/i, /asia market/i, /avoca/i, /lotts & co/i
+      /centra/i, /grocery/i, /food/i, /market/i, /asia market/i, /avoca/i, /lotts & co/i, /moldova/i
     ],
     "Restaurants, Cafes & Takeaway": [
       /restaurant/i, /cafe/i, /coffee/i, /takeaway/i, /food delivery/i,

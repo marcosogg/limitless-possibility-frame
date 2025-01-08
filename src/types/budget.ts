@@ -41,3 +41,6 @@ export interface Budget {
   miscellaneous_spent: number;
   takeaway_coffee_spent: number;
 }
+
+export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;
+export type BudgetUpdate = Partial<BudgetInsert>;
