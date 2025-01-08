@@ -1,4 +1,3 @@
-// src/components/revolut-import/TransactionsTable.tsx
 import { useState, useMemo } from "react";
 import {
   Table,
@@ -13,6 +12,14 @@ import { ArrowUpDown } from "lucide-react";
 import { TransactionFilters } from "./TransactionFilters";
 import { format, parseISO, isWithinInterval } from "date-fns";
 import type { RevolutTransactionDB } from "@/types/revolut";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import transactionCategories from "@/constants/transactionCategories.json";
 
 interface TransactionsTableProps {
   transactions: RevolutTransactionDB[];
@@ -31,6 +38,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
     dateTo: undefined as Date | undefined,
     searchTerm: "",
   });
+  const [manualCategories, setManualCategories] = useState<{ [id: string]: string }>({});
 
   const handleSort = (key: keyof RevolutTransactionDB) => {
     setSortConfig((current) => {
@@ -42,6 +50,10 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
       }
       return { key, direction: "asc" };
     });
+  };
+
+  const handleCategoryChange = (transactionId: string, category: string) => {
+    setManualCategories(prev => ({ ...prev, [transactionId]: category }));
   };
 
   const filteredAndSortedTransactions = useMemo(() => {
@@ -126,6 +138,9 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
+              <TableHead>
+                Manual Category
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -142,6 +157,24 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                   }).format(transaction.amount)}
                 </TableCell>
                 <TableCell>{transaction.category || "Uncategorized"}</TableCell>
+                <TableCell>
+                  <Select
+                    value={manualCategories[transaction.id] || ""}
+                    onValueChange={(value) => handleCategoryChange(transaction.id, value)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(transactionCategories).map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                      <SelectItem key="Other" value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

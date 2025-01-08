@@ -68,38 +68,68 @@ export const processRevolutFile = async (file: File) => {
 
 const categorizeTransaction = (description: string): string => {
   const patterns = {
-    Groceries: [
+    "Groceries & Supermarkets": [
       /tesco/i, /lidl/i, /aldi/i, /supervalu/i, /dunnes/i, /spar/i,
-      /centra/i, /grocery/i, /food/i, /market/i
+      /centra/i, /grocery/i, /food/i, /market/i, /asia market/i, /avoca/i, /lotts & co/i
     ],
-    Transportation: [
-      /dublin bus/i, /irish rail/i, /leap/i, /taxi/i, /uber/i, /transport/i,
-      /bus/i, /train/i, /luas/i, /dart/i
-    ],
-    Dining: [
+    "Restaurants, Cafes & Takeaway": [
       /restaurant/i, /cafe/i, /coffee/i, /takeaway/i, /food delivery/i,
-      /just eat/i, /deliveroo/i, /mcdonalds/i, /burger/i
+      /just eat/i, /deliveroo/i, /mcdonalds/i, /burger/i, /boojum/i, /bread 41/i,
+      /bunsen/i, /chutni/i, /fallon & byrne/i, /fresh the good food market/i,
+      /gelato/i, /il forno/i, /indian eateries/i, /kc peaches/i, /oakberry/i,
+      /sushida rathmines/i, /the sugar loaf bakery/i, /zaytoon/i, /amuri/i
     ],
-    Shopping: [
-      /amazon/i, /shop/i, /store/i, /retail/i, /clothing/i, /fashion/i,
-      /penneys/i, /primark/i, /tk maxx/i, /zara/i, /h&m/i
+    "Pubs & Bars": [
+      /dicey's garden club/i, /doyles/i, /f.x. buckley/i, /j d wetherspoon/i,
+      /paddy cullen's pub/i, /searsons bar/i, /slattery's d4/i, /the barge/i,
+      /the bath pub/i, /the camden/i, /the chatty fox/i, /the depot at the c/i,
+      /the hill/i, /the jar/i
     ],
-    Entertainment: [
-      /cinema/i, /movie/i, /theatre/i, /concert/i, /spotify/i, /netflix/i,
-      /disney/i, /entertainment/i, /game/i
+    "Clothing & Apparel": [
+      /arnotts/i, /cotswold outdoor/i, /decathlon/i, /guineys/i, /penneys/i,
+      /superdry/i, /temu/i, /timberland/i, /trespass/i, /uniqlo/i
     ],
-    Transfers: [
-      /transfer/i, /sent/i, /received/i, /payment/i, /revolut/i
+    "Home & Hardware": [
+      /decwells hardware/i, /ikea/i
     ],
-    "Top-ups": [
-      /top.?up/i, /topup/i, /added money/i, /loaded/i
+    "Travel & Transportation": [
+      /aer lingus/i, /aircoach/i, /citi bus/i, /delta air lines/i, /free now/i,
+      /irish rail/i, /national transport authority/i, /transport for ireland - tfi/i
     ],
-    Services: [
-      /service/i, /subscription/i, /membership/i, /fee/i
+    "Health & Pharmacy": [
+      /aungier street clinic/i, /boots/i, /dronline/i, /hickey’s pharmacy/i,
+      /life pharmacy/i
     ],
-    Bills: [
-      /bill/i, /utility/i, /electric/i, /gas/i, /water/i, /phone/i,
-      /mobile/i, /broadband/i, /internet/i, /rent/i
+    "Entertainment & Leisure": [
+      /aviva stadium/i, /dublin zoo/i, /ticketmaster/i
+    ],
+    "Online Services & Subscriptions": [
+      /amazon/i, /amazon prime/i, /anthropic/i, /daft.ie/i, /google cloud/i,
+      /gumroad/i, /microsoft/i, /microsoft 365/i, /openai/i, /plus plan fee/i,
+      /supabase/i, /www.printables.com/i
+    ],
+    "Other Retail": [
+      /dealz/i, /euro giant/i, /maxi zoo/i, /relay/i
+    ],
+    "Money Transfer": [
+      /wise/i
+    ],
+    "Education": [
+      /south east technological university/i, /codecademy/i
+    ],
+    "Personal Care": [
+      /fireplace barbershop/i, /the fireplace barber shop/i
+    ],
+    "Utilities & Bills": [
+      /to an post tv licence/i, /to sseairtricity/i, /virgin media ireland limited/i
+    ],
+    "Miscellaneous": [
+      /an post/i, /to eur holidays/i, /to tatiani maria de faria/i,
+      /sugarloaf bakery/i, /the source bulk foods/i, /tucano/i
+    ],
+    "Takeaway coffee": [
+      /coffeeangel/i, /starbucks/i, /clement & pekoe/i, /butlers chocolates/i,
+      /insomnia coffee company/i
     ]
   };
 
