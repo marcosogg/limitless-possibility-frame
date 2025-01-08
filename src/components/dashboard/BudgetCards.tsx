@@ -26,7 +26,7 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
     setEditedBudget(budget);
   }, [budget]);
 
-  const handleSpentChange = (category: string, value: string) => {
+  const handleSpentChange = (spentKey: string, value: string) => {
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue < 0) {
       toast({
@@ -36,9 +36,9 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
       });
       return;
     }
-    setEditedBudget((prev) => ({
+    setEditedBudget(prev => ({
       ...prev,
-      [`${category.toLowerCase()}_spent`]: numValue,
+      [spentKey]: numValue
     }));
   };
 
@@ -125,7 +125,7 @@ export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
                 spent={Number(editedBudget[spentKey as keyof Budget])}
                 planned={Number(editedBudget[plannedKey as keyof Budget])}
                 isEditing={isEditing}
-                onSpentChange={(value) => handleSpentChange(name, value)}
+                onSpentChange={(value) => handleSpentChange(spentKey, value)}
               />
             ))}
             <div className="pt-4 border-t">

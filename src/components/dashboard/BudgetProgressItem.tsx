@@ -1,3 +1,4 @@
+// src/components/dashboard/BudgetProgressItem.tsx
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,7 @@ interface BudgetProgressItemProps {
   spent: number;
   planned: number;
   isEditing: boolean;
-  onSpentChange?: (value: string) => void;
+  onSpentChange?: (spentKey: string, value: string) => void;
 }
 
 export function BudgetProgressItem({
@@ -36,7 +37,7 @@ export function BudgetProgressItem({
           <Input
             type="number"
             value={spent}
-            onChange={(e) => onSpentChange?.(e.target.value)}
+            onChange={(e) => onSpentChange?.(name.toLowerCase().replace(/\s+/g, '_') + '_spent', e.target.value)}
             className="w-32 text-right"
             aria-label={`Enter spent amount for ${name}`}
           />
