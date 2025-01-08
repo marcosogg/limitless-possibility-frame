@@ -36,7 +36,7 @@ export function BudgetProgressItem({
         {isEditing ? (
           <Input
             type="number"
-            value={spent}
+            value={String(spent)}
             onChange={(e) => onSpentChange?.(name.toLowerCase().replace(/\s+/g, '_') + '_spent', e.target.value)}
             className="w-32 text-right"
             aria-label={`Enter spent amount for ${name}`}
