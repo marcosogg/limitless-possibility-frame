@@ -1,4 +1,6 @@
-// src/pages/RevolutImport.tsx
+// File: src/pages/RevolutImport.tsx
+// Complete code for RevolutImport component
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { parse } from "date-fns";
@@ -151,12 +153,39 @@ export default function RevolutImport() {
         })
         .filter((t): t is RevolutTransactionDB => t !== null);
 
+      // Check for duplicates before setting previewTransactions
+      const existingTransactions = new Set(
+        transactions.map((t) => `${t.date}-${t.description}-${t.amount}`)
+      );
+
+      const newTransactions = processedTransactions.filter((t) => {
+        const transactionKey = `${t.date}-${t.description}-${t.amount}`;
+        return !existingTransactions.has(transactionKey);
+      });
+
+      if (newTransactions.length === 0) {
+        toast({
+          title: "No new transactions",
+          description: "All transactions from this file have already been imported.",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      if (newTransactions.length < processedTransactions.length) {
+        toast({
+          title: "Duplicate transactions found",
+          description: "Some transactions from this file have already been imported. They will be skipped.",
+        });
+      }
+
       // Set the parsed transactions to the preview state
-      setPreviewTransactions(processedTransactions);
+      setPreviewTransactions(newTransactions);
 
       toast({
         title: "Preview",
-        description: `Parsed ${processedTransactions.length} transactions. Please review before saving.`,
+        description: `Parsed ${newTransactions.length} new transactions. Please review before saving.`,
       });
 
     } catch (error: any) {
