@@ -1,16 +1,6 @@
-// src/types/revolut.ts
-
-export interface RevolutTransactionDB {
-  date: string;          // ISO string format
-  description: string;
-  amount: number;        // Always negative for expenses
-  currency: string;      // e.g., "EUR", "USD"
-  category: string;      // Based on categorizeTransaction function
-  profile_id: string;    // Supabase user ID
-}
-
-export interface RevolutCSVRow {
+export interface RevolutTransaction {
   type: string;
+  product: string;
   startedDate: string;
   completedDate: string;
   description: string;
@@ -19,4 +9,13 @@ export interface RevolutCSVRow {
   currency: string;
   state: string;
   balance: string;
+}
+
+export interface RevolutTransactionDB {
+  date: string;
+  description: string;
+  amount: number;
+  currency: string;
+  category: string | null;
+  profile_id: string;
 }
