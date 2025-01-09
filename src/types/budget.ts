@@ -36,6 +36,7 @@ export interface Budget {
   travel_spent: number;
   takeaway_coffee_spent: number;
   uncategorized_spent: number;
+  pubs_bars_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;
