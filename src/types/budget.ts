@@ -1,12 +1,17 @@
 // src/types/budget.ts
 export interface Budget {
+  // System fields
   id: string;
   user_id: string;
   month: number;
   year: number;
   created_at: string | null;
+
+  // Income fields
   salary: number;
   bonus: number;
+
+  // Budget categories (limits)
   rent: number;
   utilities: number;
   groceries: number;
@@ -16,9 +21,20 @@ export interface Budget {
   miscellaneous: number;
   savings: number;
   dining_out: number;
-  health_fitness: number;
+  health_pharmacy: number;
+  fitness: number;
   personal_care: number;
+  travel: number;
   education: number;
+  takeaway_coffee: number;
+  pubs_bars: number;
+  clothing_apparel: number;
+  home_hardware: number;
+  online_services_subscriptions: number;
+  money_transfer: number;
+  delivery_takeaway: number;
+
+  // Spent amounts
   rent_spent: number;
   utilities_spent: number;
   groceries_spent: number;
@@ -28,22 +44,19 @@ export interface Budget {
   miscellaneous_spent: number;
   savings_spent: number;
   dining_out_spent: number;
-  health_fitness_spent: number;
+  health_pharmacy_spent: number;
+  fitness_spent: number;
   personal_care_spent: number;
+  travel_spent: number;
   education_spent: number;
   takeaway_coffee_spent: number;
-  uncategorized_spent: number;
   pubs_bars_spent: number;
   clothing_apparel_spent: number;
   home_hardware_spent: number;
-  travel_transportation_spent: number;
   online_services_subscriptions_spent: number;
-  other_retail_spent: number;
   money_transfer_spent: number;
-  gifts_donations: number;
-  gifts_donations_spent: number;
-  travel: number;
-  travel_spent: number;
+  delivery_takeaway_spent: number;
+  uncategorized_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;
