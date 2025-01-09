@@ -54,7 +54,25 @@ export default function Index() {
         .maybeSingle();
 
       if (error) throw error;
-      setBudget(data);
+
+      if (data) {
+        // Ensure all required spent fields are initialized
+        const budgetWithDefaults: Budget = {
+          ...data,
+          takeaway_coffee_spent: data.takeaway_coffee_spent || 0,
+          uncategorized_spent: data.uncategorized_spent || 0,
+          pubs_bars_spent: data.pubs_bars_spent || 0,
+          clothing_apparel_spent: data.clothing_apparel_spent || 0,
+          home_hardware_spent: data.home_hardware_spent || 0,
+          travel_transportation_spent: data.travel_transportation_spent || 0,
+          online_services_subscriptions_spent: data.online_services_subscriptions_spent || 0,
+          other_retail_spent: data.other_retail_spent || 0,
+          money_transfer_spent: data.money_transfer_spent || 0,
+        };
+        setBudget(budgetWithDefaults);
+      } else {
+        setBudget(null);
+      }
     } catch (error) {
       console.error("Error fetching budget:", error);
       toast({

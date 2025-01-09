@@ -45,13 +45,14 @@ export function useBudgetSpentUpdate(
       Object.entries(monthlySpending).forEach(([category, sum]) => {
         const budgetCategory = CATEGORIES.find(cat => cat.name === category);
         if (budgetCategory) {
-          updatedBudget[budgetCategory.spentKey as keyof Budget] = sum;
+          const spentKey = budgetCategory.spentKey as keyof Budget;
+          updatedBudget[spentKey] = sum;
         } else if (category === "Uncategorized") {
           updatedBudget.uncategorized_spent = sum;
         }
       });
 
-      UpdateSpent(updatedBudget);
+      onUpdateSpent(updatedBudget);
     }
-  }, [transactions, budget.id]);
+  }, [transactions, budget.id, onUpdateSpent]);
 }
