@@ -25,7 +25,7 @@ export const processRevolutFile = async (file: File): Promise<number> => {
             const line = lines[i];
             const parts = line.split(',');
 
-            if (parts.length >= 10) { // Ensure line has enough fields (you had 9 in Power Query, but the CSV has 10)
+            if (parts.length >= 10) { // Ensure line has enough fields
               const type = parts[0].trim();
               const product = parts[1].trim();
               const completedDate = parts[3].trim();
@@ -42,6 +42,9 @@ export const processRevolutFile = async (file: File): Promise<number> => {
 
               // Filter Rows: Amount < 0
               if (amount >= 0) continue;
+
+              // Filter out "Credit card repayment" descriptions
+              if (description.includes("credit card repayment")) continue;
 
               // Check if completedDate is valid
               if (!completedDate) {
