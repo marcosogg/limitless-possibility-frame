@@ -37,6 +37,12 @@ export interface Budget {
   takeaway_coffee_spent: number;
   uncategorized_spent: number;
   pubs_bars_spent: number;
+  clothing_apparel_spent: number;
+  home_hardware_spent: number;
+  travel_transportation_spent: number;
+  online_services_subscriptions_spent: number;
+  other_retail_spent: number;
+  money_transfer_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;
