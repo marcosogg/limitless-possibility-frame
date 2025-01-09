@@ -34,6 +34,7 @@ export interface Budget {
   education_spent: number;
   gifts_donations_spent: number;
   travel_spent: number;
+  // Add missing spent categories
   takeaway_coffee_spent: number;
   uncategorized_spent: number;
   pubs_bars_spent: number;
