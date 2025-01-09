@@ -132,6 +132,8 @@ export default function Index() {
             <BudgetCards
               budget={budget}
               onUpdateSpent={handleUpdateSpent}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
             />
             <BillRemindersCard />
           </div>

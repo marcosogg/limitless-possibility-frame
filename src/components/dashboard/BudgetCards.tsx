@@ -1,5 +1,5 @@
 // src/components/dashboard/BudgetCards.tsx
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { sumMonthlySpending } from "@/utils/budgetCalculations";
@@ -30,6 +30,10 @@ export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear
     queryKey: ['transactions', selectedMonth, selectedYear],
     queryFn: async () => {
       try {
+        if (!selectedMonth || !selectedYear) {
+          throw new Error('Month and year must be defined');
+        }
+
         const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
         const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-31`;
 
@@ -51,7 +55,7 @@ export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear
         throw error;
       }
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: !!selectedMonth && !!selectedYear,
   });
 
   useEffect(() => {
@@ -240,13 +244,13 @@ export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear
         </CardHeader>
         <CardContent className="pt-0">
           <div className="space-y-4">
-          {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => (
+            {CATEGORIES.map(({ name, icon: Icon, plannedKey, spentKey }) => (
               <BudgetProgressItem
                 key={name}
                 name={name}
                 Icon={Icon}
-                spent={Number(editedBudget[spentKey as keyof Budget])}
-                planned={Number(editedBudget[plannedKey as keyof Budget])}
+                spent={Number(editedBudget[spentKey as keyof Budget] || 0)}
+                planned={Number(editedBudget[plannedKey as keyof Budget] || 0)}
                 isEditing={isEditing}
                 onSpentChange={handleSpentChange}
               />
