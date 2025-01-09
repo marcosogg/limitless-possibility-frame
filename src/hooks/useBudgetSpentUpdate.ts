@@ -47,7 +47,8 @@ export function useBudgetSpentUpdate(
         
         if (budgetCategory) {
           const spentKey = budgetCategory.spentKey;
-          updatedBudget[spentKey as keyof Budget] = Number(sum);
+          const typedSpentKey = spentKey as keyof typeof updatedBudget;
+          updatedBudget[typedSpentKey] = Number(sum);
         } else if (category === "Uncategorized") {
           updatedBudget.uncategorized_spent = Number(sum);
         }
