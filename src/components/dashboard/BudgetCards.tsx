@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/types/budget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,70 +7,74 @@ import { formatCurrency } from "@/lib/utils";
 import { PlannedBudgetCard } from "./PlannedBudgetCard";
 import { BudgetProgressItem } from "./BudgetProgressItem";
 import { useToast } from "@/hooks/use-toast";
-import { useBudgetSpentUpdate } from "@/hooks/useBudgetSpentUpdate";
-import { useBudgetUpdates } from "@/hooks/useBudgetUpdates";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BudgetCardsProps {
   budget: Budget;
   onUpdateSpent: (updatedBudget: Budget) => void;
-  selectedMonth: number;
-  selectedYear: number;
 }
 
-export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear }: BudgetCardsProps) {
+export function BudgetCards({ budget, onUpdateSpent }: BudgetCardsProps) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editedBudget, setEditedBudget] = useState<Budget>(budget);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const { data: transactions, error, isLoading } = useQuery({
-    queryKey: ['transactions', selectedMonth, selectedYear],
-    queryFn: async () => {
-      if (!selectedMonth || !selectedYear) {
-        throw new Error('Month and year must be defined');
-      }
-
-      const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-      const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-31`;
-
-      const { data, error } = await supabase
-        .from('revolut_transactions')
-        .select('*')
-        .gte('date', startDate)
-        .lte('date', endDate);
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedMonth && !!selectedYear,
-  });
-
-  // Pass all required parameters to the hook
-  useBudgetSpentUpdate(transactions, budget, onUpdateSpent, selectedMonth, selectedYear);
-
-  const { handleSpentChange, handleSave, isSaving } = useBudgetUpdates(
-    editedBudget,
-    budget.id,
-    setIsEditing,
-    onUpdateSpent
-  );
-
-  const calculateTotalSpent = (budget: Budget): number => {
-    let totalSpent = 0;
-    for (const key in budget) {
-      if (key.endsWith('_spent')) {
-        totalSpent += Number(budget[key as keyof Budget]);
-      }
-    }
-    return totalSpent;
+  const handleSpentChange = (categoryName: string, newValue: number) => {
+    const spentKey = `${categoryName.toLowerCase().replace(/\s+/g, '_')}_spent`;
+    setEditedBudget(prev => ({
+      ...prev,
+      [spentKey]: newValue
+    }));
   };
 
-  if (error) {
-    return <div>Error loading transactions</div>;
-  }
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Create an object with only the spent fields
+      const updates = Object.fromEntries(
+        CATEGORIES.map((cat) => [
+          cat.spentKey,
+          editedBudget[cat.spentKey as keyof Budget]
+        ])
+      );
 
-  if (isLoading) {
-    return <div>Loading transactions...</div>;
-  }
+      const { error } = await supabase
+        .from("budgets")
+        .update(updates)
+        .eq("id", budget.id);
+
+      if (error) throw error;
+
+      onUpdateSpent(editedBudget);
+      setIsEditing(false);
+      
+      toast({
+        title: "Success",
+        description: "Expenses updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating budget:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update expenses",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedBudget(budget);
+    setIsEditing(false);
+  };
+
+  const calculateTotalSpent = (budget: Budget): number => {
+    return CATEGORIES.reduce((total, category) => {
+      return total + Number(budget[category.spentKey as keyof Budget] || 0);
+    }, 0);
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -98,14 +100,15 @@ export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditedBudget(budget);
-                  }}
+                  onClick={handleCancel}
                 >
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                <Button 
+                  size="sm" 
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                >
                   {isSaving ? "Saving..." : "Save"}
                 </Button>
               </div>
@@ -119,10 +122,10 @@ export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear
                 key={name}
                 name={name}
                 Icon={Icon}
-                spent={Number(editedBudget[spentKey as keyof Budget])}
-                planned={Number(editedBudget[plannedKey as keyof Budget])}
+                spent={Number(editedBudget[spentKey as keyof Budget] || 0)}
+                planned={Number(editedBudget[plannedKey as keyof Budget] || 0)}
                 isEditing={isEditing}
-                onSpentChange={handleSpentChange}
+                onSpentChange={(value) => handleSpentChange(name, value)}
               />
             ))}
             <div className="pt-4 border-t">

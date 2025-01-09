@@ -1,5 +1,4 @@
 // src/components/dashboard/BudgetProgressItem.tsx
-import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { calculatePercentage } from "@/utils/budgetCalculations";
@@ -10,7 +9,7 @@ interface BudgetProgressItemProps {
   spent: number;
   planned: number;
   isEditing: boolean;
-  onSpentChange?: (spentKey: string, value: string) => void;
+  onSpentChange: (value: number) => void;
 }
 
 export function BudgetProgressItem({
@@ -24,24 +23,35 @@ export function BudgetProgressItem({
   const percentage = calculatePercentage(spent, planned);
   const remaining = planned - spent;
   const isOverspent = spent > planned;
-  const formattedRemaining = formatCurrency(Math.abs(remaining));
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    const spentKey = name.toLowerCase().replace(/\s+/g, '_') + '_spent';
-    
-    // Handle empty input
     if (value === '') {
-      onSpentChange?.(spentKey, '0');
+      onSpentChange(0);
       return;
     }
-  
-    // Validate number input
+
     const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue >= 0) {
-      // Format to 2 decimal places and ensure step of 10.00
-      const formattedValue = (Math.round(numValue / 10) * 10).toFixed(2);
-      onSpentChange?.(spentKey, formattedValue);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 1000000) {
+      onSpentChange(numValue);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    
+    e.preventDefault();
+    const step = 10;
+    const currentValue = spent || 0;
+    
+    if (e.key === 'ArrowUp') {
+      const newValue = currentValue + step;
+      if (newValue <= 1000000) {
+        onSpentChange(newValue);
+      }
+    } else {
+      const newValue = Math.max(0, currentValue - step);
+      onSpentChange(newValue);
     }
   };
 
@@ -56,9 +66,10 @@ export function BudgetProgressItem({
           <input
             type="number"
             min="0"
-            step="10.00"
+            max="1000000"
             value={spent}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             className="h-10 w-32 rounded-md border px-3 py-2 text-right text-sm bg-white"
             aria-label={`Enter spent amount for ${name}`}
           />
@@ -87,7 +98,7 @@ export function BudgetProgressItem({
               "font-medium",
               isOverspent ? "text-red-600" : "text-green-600"
             )}>
-              ({isOverspent ? "+" : ""}{formattedRemaining})
+              ({isOverspent ? "+" : ""}{formatCurrency(Math.abs(remaining))})
             </span>
           </div>
         </>

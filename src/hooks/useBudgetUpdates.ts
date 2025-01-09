@@ -13,47 +13,14 @@ export function useBudgetUpdates(
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSpentChange = (spentKey: string, value: string) => {
-    try {
-      // Convert value to number, defaulting to 0 if empty
-      const numValue = value === "" ? 0 : Number(value);
-      
-      // Validate the number
-      if (isNaN(numValue)) {
-        console.warn("Invalid number input:", value);
-        return;
-      }
-      
-      // Ensure non-negative value
-      if (numValue < 0) {
-        console.warn("Negative value not allowed:", value);
-        return;
-      }
-
-      // Update the budget with the validated number
-      const updatedBudget = {
-        ...editedBudget,
-        [spentKey]: numValue
-      };
-      
-      onUpdateSpent(updatedBudget);
-    } catch (error) {
-      console.error("Error updating spent value:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update value. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Create an object with only the spent fields
       const updates = Object.fromEntries(
         CATEGORIES.map((cat) => [
           cat.spentKey,
-          Number(editedBudget[cat.spentKey as keyof Budget]),
+          Number(editedBudget[cat.spentKey as keyof Budget]) || 0,
         ])
       );
 
@@ -64,7 +31,10 @@ export function useBudgetUpdates(
 
       if (error) throw error;
 
+      // Update the parent component's state
+      onUpdateSpent(editedBudget);
       setIsEditing(false);
+      
       toast({
         title: "Success",
         description: "Budget updated successfully",
@@ -82,7 +52,6 @@ export function useBudgetUpdates(
   };
 
   return {
-    handleSpentChange,
     handleSave,
     isSaving,
   };
