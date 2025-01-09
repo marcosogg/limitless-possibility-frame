@@ -13,7 +13,7 @@ export function useBudgetSpentUpdate(
     if (transactions) {
       const monthlySpending = sumMonthlySpending(transactions);
 
-      // Create updated budget with new spent amounts, initializing missing categories to 0
+      // Create updated budget with new spent amounts, initializing all categories to 0
       const updatedBudget: Budget = {
         ...budget,
         takeaway_coffee_spent: 0,
@@ -37,6 +37,8 @@ export function useBudgetSpentUpdate(
         online_services_subscriptions_spent: 0,
         other_retail_spent: 0,
         money_transfer_spent: 0,
+        gifts_donations_spent: 0,
+        travel_spent: 0
       };
 
       // Map category sums to budget spent fields
@@ -49,8 +51,7 @@ export function useBudgetSpentUpdate(
         }
       });
 
-      // Update the budget with new spent amounts
-      onUpdateSpent(updatedBudget);
+      UpdateSpent(updatedBudget);
     }
   }, [transactions, budget.id]);
 }
