@@ -48,9 +48,10 @@ export function useBudgetSpentUpdate(
         const budgetCategory = CATEGORIES.find(cat => cat.name === category);
         
         if (budgetCategory) {
-          updatedBudget[budgetCategory.spentKey as keyof Budget] = sum as number;
+          const spentKey = budgetCategory.spentKey as keyof Budget;
+          updatedBudget[spentKey] = Number(sum);
         } else if (category === "Uncategorized") {
-          updatedBudget.uncategorized_spent = sum as number;
+          updatedBudget.uncategorized_spent = Number(sum);
         }
       });
 
