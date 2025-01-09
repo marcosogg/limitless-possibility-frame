@@ -15,11 +15,8 @@ export function useBudgetSpentUpdate(
     if (transactions) {
       const monthlySpending = sumMonthlySpending(transactions);
 
-      // Create updated budget with new spent amounts
       const updatedBudget: Budget = {
         ...budget,
-        takeaway_coffee_spent: 0,
-        uncategorized_spent: 0,
         rent_spent: 0,
         utilities_spent: 0,
         groceries_spent: 0,
@@ -32,6 +29,8 @@ export function useBudgetSpentUpdate(
         health_fitness_spent: 0,
         personal_care_spent: 0,
         education_spent: 0,
+        takeaway_coffee_spent: 0,
+        uncategorized_spent: 0,
         pubs_bars_spent: 0,
         clothing_apparel_spent: 0,
         home_hardware_spent: 0,
@@ -43,19 +42,17 @@ export function useBudgetSpentUpdate(
         travel_spent: 0
       };
 
-      // Map category sums to budget spent fields
       Object.entries(monthlySpending).forEach(([category, sum]) => {
         const budgetCategory = CATEGORIES.find(cat => cat.name === category);
         
         if (budgetCategory) {
-          const spentKey = budgetCategory.spentKey as keyof Budget;
-          updatedBudget[spentKey] = Number(sum);
+          const spentKey = budgetCategory.spentKey;
+          updatedBudget[spentKey as keyof Budget] = Number(sum);
         } else if (category === "Uncategorized") {
           updatedBudget.uncategorized_spent = Number(sum);
         }
       });
 
-      // Update the budget with new spent amounts
       onUpdateSpent(updatedBudget);
     }
   }, [transactions, budget, onUpdateSpent, selectedMonth, selectedYear]);
