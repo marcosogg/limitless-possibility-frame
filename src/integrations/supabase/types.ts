@@ -51,6 +51,7 @@ export type Database = {
       budgets: {
         Row: {
           bonus: number
+          clothing_apparel_spent: number
           created_at: string | null
           dining_out: number
           dining_out_spent: number
@@ -64,12 +65,17 @@ export type Database = {
           groceries_spent: number
           health_fitness: number
           health_fitness_spent: number
+          home_hardware_spent: number
           id: string
           miscellaneous: number
           miscellaneous_spent: number
+          money_transfer_spent: number
           month: number
+          online_services_subscriptions_spent: number
+          other_retail_spent: number
           personal_care: number
           personal_care_spent: number
+          pubs_bars_spent: number
           rent: number
           rent_spent: number
           salary: number
@@ -77,10 +83,13 @@ export type Database = {
           savings_spent: number
           shopping: number
           shopping_spent: number
+          takeaway_coffee_spent: number
           transport: number
           transport_spent: number
           travel: number
           travel_spent: number
+          travel_transportation_spent: number
+          uncategorized_spent: number
           user_id: string
           utilities: number
           utilities_spent: number
@@ -88,6 +97,7 @@ export type Database = {
         }
         Insert: {
           bonus?: number
+          clothing_apparel_spent?: number
           created_at?: string | null
           dining_out?: number
           dining_out_spent?: number
@@ -101,12 +111,17 @@ export type Database = {
           groceries_spent?: number
           health_fitness?: number
           health_fitness_spent?: number
+          home_hardware_spent?: number
           id?: string
           miscellaneous?: number
           miscellaneous_spent?: number
+          money_transfer_spent?: number
           month: number
+          online_services_subscriptions_spent?: number
+          other_retail_spent?: number
           personal_care?: number
           personal_care_spent?: number
+          pubs_bars_spent?: number
           rent?: number
           rent_spent?: number
           salary?: number
@@ -114,10 +129,13 @@ export type Database = {
           savings_spent?: number
           shopping?: number
           shopping_spent?: number
+          takeaway_coffee_spent?: number
           transport?: number
           transport_spent?: number
           travel?: number
           travel_spent?: number
+          travel_transportation_spent?: number
+          uncategorized_spent?: number
           user_id: string
           utilities?: number
           utilities_spent?: number
@@ -125,6 +143,7 @@ export type Database = {
         }
         Update: {
           bonus?: number
+          clothing_apparel_spent?: number
           created_at?: string | null
           dining_out?: number
           dining_out_spent?: number
@@ -138,12 +157,17 @@ export type Database = {
           groceries_spent?: number
           health_fitness?: number
           health_fitness_spent?: number
+          home_hardware_spent?: number
           id?: string
           miscellaneous?: number
           miscellaneous_spent?: number
+          money_transfer_spent?: number
           month?: number
+          online_services_subscriptions_spent?: number
+          other_retail_spent?: number
           personal_care?: number
           personal_care_spent?: number
+          pubs_bars_spent?: number
           rent?: number
           rent_spent?: number
           salary?: number
@@ -151,10 +175,13 @@ export type Database = {
           savings_spent?: number
           shopping?: number
           shopping_spent?: number
+          takeaway_coffee_spent?: number
           transport?: number
           transport_spent?: number
           travel?: number
           travel_spent?: number
+          travel_transportation_spent?: number
+          uncategorized_spent?: number
           user_id?: string
           utilities?: number
           utilities_spent?: number
