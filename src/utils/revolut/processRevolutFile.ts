@@ -19,7 +19,7 @@ export const processRevolutFile = async (file: File): Promise<number> => {
           // Extract and Transform using logic similar to Power Query steps
           const transactions: RevolutTransactionDB[] = [];
           const lines = content.split('\n');
-          
+
           // Headers are on the first line (index 0), so we can start at index 1
           for (let i = 1; i < lines.length; i++) {
             const line = lines[i];
@@ -55,7 +55,8 @@ export const processRevolutFile = async (file: File): Promise<number> => {
               // Parse date, handle potential errors
               let parsedDate;
               try {
-                parsedDate = parse(completedDate, 'dd/MM/yyyy HH:mm', new Date());
+                // Parse using the correct format: YYYY-MM-DD HH:MM:SS
+                parsedDate = parse(completedDate, 'yyyy-MM-dd HH:mm:ss', new Date());
                 if (isNaN(parsedDate.getTime())) {
                   throw new Error('Invalid date format');
                 }
@@ -70,9 +71,9 @@ export const processRevolutFile = async (file: File): Promise<number> => {
               transactions.push({
                 id: uuidv4(),
                 profile_id: user.id,
-                date: format(parsedDate, 'yyyy-MM-dd'),
+                date: format(parsedDate, 'yyyy-MM-dd'), // Format after successful parsing
                 description: `${description} (from file: ${file.name})`,
-                amount: -amount, // Negate amount for expenses to make it positive
+                amount: type === 'TOPUP' ? amount : -amount, // Negate amount for expenses to make it positive
                 currency,
                 category,
               });
