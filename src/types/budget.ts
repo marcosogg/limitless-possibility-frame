@@ -30,6 +30,7 @@ export interface Budget {
   health_fitness_spent: number;
   personal_care_spent: number;
   education_spent: number;
+  uncategorized_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;

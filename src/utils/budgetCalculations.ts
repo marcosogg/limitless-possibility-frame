@@ -1,21 +1,34 @@
-import { Budget } from "@/types/budget";
-import { CATEGORIES } from "@/constants/budget";
+import transactionCategories from "@/constants/transactionCategories.json";
+import { RevolutTransactionDB } from "@/types/revolut";
 
-export const calculatePercentage = (spent: number, planned: number): number => {
-  if (planned === 0) return spent > 0 ? 100 : 0;
-  return (spent / planned) * 100;
-};
+export const sumMonthlySpending = (transactions: RevolutTransactionDB[] | undefined): Record<string, number> => {
+  if (!transactions) {
+    return {};
+  }
 
-export const calculateTotalPlanned = (budget: Budget): number => {
-  return CATEGORIES.reduce((acc, cat) => {
-    const value = Number(budget[cat.plannedKey as keyof Budget]) || 0;
-    return acc + value;
-  }, 0);
-};
+  const spending: Record<string, number> = {};
 
-export const calculateTotalSpent = (budget: Budget): number => {
-  return CATEGORIES.reduce((acc, cat) => {
-    const value = Number(budget[cat.spentKey as keyof Budget]) || 0;
-    return acc + value;
-  }, 0);
+  // Initialize all categories with 0, including "Uncategorized"
+  Object.keys(transactionCategories).forEach(category => {
+    spending[category] = 0;
+  });
+  spending["Uncategorized"] = 0;
+
+  // Sum up transactions by category
+  transactions.forEach(transaction => {
+    let foundCategory = false;
+    for (const [category, vendors] of Object.entries(transactionCategories)) {
+      if (vendors.some(vendor => transaction.description.toLowerCase().includes(vendor.toLowerCase()))) {
+        spending[category] += Math.abs(transaction.amount);
+        foundCategory = true;
+        break;
+      }
+    }
+    // If no category is found, assign to "Uncategorized"
+    if (!foundCategory) {
+      spending["Uncategorized"] += Math.abs(transaction.amount);
+    }
+  });
+
+  return spending;
 };
