@@ -1,3 +1,4 @@
+// src/hooks/useBudgetSpentUpdate.ts
 import { useEffect } from "react";
 import { Budget } from "@/types/budget";
 import { RevolutTransactionDB } from "@/types/revolut";
@@ -7,7 +8,9 @@ import { CATEGORIES } from "@/constants/budget";
 export function useBudgetSpentUpdate(
   transactions: RevolutTransactionDB[] | undefined,
   budget: Budget,
-  onUpdateSpent: (updatedBudget: Budget) => void
+  onUpdateSpent: (updatedBudget: Budget) => void,
+  selectedMonth: number,
+  selectedYear: number
 ) {
   useEffect(() => {
     if (transactions) {
@@ -38,21 +41,24 @@ export function useBudgetSpentUpdate(
         other_retail_spent: 0,
         money_transfer_spent: 0,
         gifts_donations_spent: 0,
-        travel_spent: 0
+        travel_spent: 0,
       };
 
       // Map category sums to budget spent fields
       Object.entries(monthlySpending).forEach(([category, sum]) => {
+        // Find the corresponding category in your CATEGORIES constant
         const budgetCategory = CATEGORIES.find(cat => cat.name === category);
+
         if (budgetCategory) {
-          const spentKey = budgetCategory.spentKey as keyof Budget;
-          updatedBudget[spentKey] = sum;
+          // Update the corresponding spent field in the budget
+          updatedBudget[budgetCategory.spentKey as keyof Budget] = sum;
         } else if (category === "Uncategorized") {
           updatedBudget.uncategorized_spent = sum;
         }
       });
 
+      // Update the budget with new spent amounts
       onUpdateSpent(updatedBudget);
     }
-  }, [transactions, budget.id, onUpdateSpent]);
+  }, [transactions, budget, onUpdateSpent, selectedMonth, selectedYear]);
 }

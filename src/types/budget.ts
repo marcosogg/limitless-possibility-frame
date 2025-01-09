@@ -1,3 +1,4 @@
+// src/types/budget.ts
 export interface Budget {
   id: string;
   user_id: string;
@@ -18,8 +19,6 @@ export interface Budget {
   health_fitness: number;
   personal_care: number;
   education: number;
-  gifts_donations: number;
-  travel: number;
   rent_spent: number;
   utilities_spent: number;
   groceries_spent: number;
@@ -32,9 +31,6 @@ export interface Budget {
   health_fitness_spent: number;
   personal_care_spent: number;
   education_spent: number;
-  gifts_donations_spent: number;
-  travel_spent: number;
-  // Add missing spent categories
   takeaway_coffee_spent: number;
   uncategorized_spent: number;
   pubs_bars_spent: number;
@@ -44,6 +40,10 @@ export interface Budget {
   online_services_subscriptions_spent: number;
   other_retail_spent: number;
   money_transfer_spent: number;
+  gifts_donations: number;
+  gifts_donations_spent: number;
+  travel: number;
+  travel_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;
