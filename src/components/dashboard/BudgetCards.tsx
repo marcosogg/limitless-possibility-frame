@@ -46,8 +46,8 @@ export function BudgetCards({ budget, onUpdateSpent, selectedMonth, selectedYear
     enabled: !!selectedMonth && !!selectedYear,
   });
 
-  // Use the new hook for budget updates
-  useBudgetSpentUpdate(transactions, budget, onUpdateSpent);
+  // Pass all required parameters to the hook
+  useBudgetSpentUpdate(transactions, budget, onUpdateSpent, selectedMonth, selectedYear);
 
   const { handleSpentChange, handleSave, isSaving } = useBudgetUpdates(
     editedBudget,
