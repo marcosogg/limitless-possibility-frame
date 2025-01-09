@@ -1,8 +1,12 @@
 import { useEffect } from "react";
-import { Budget } from "@/types/budget";
-import { RevolutTransactionDB } from "@/types/revolut";
-import { sumMonthlySpending } from "@/utils/budgetCalculations";
-import { CATEGORIES } from "@/constants/budget";
+import { Budget } from "../types/budget";
+import { RevolutTransactionDB } from "../types/revolut";
+import { sumMonthlySpending } from "../utils/budgetCalculations";
+import { CATEGORIES } from "../constants/budget";
+
+type BudgetSpentKeys = {
+  [K in keyof Budget]: K extends `${string}_spent` ? K : never
+}[keyof Budget];
 
 export function useBudgetSpentUpdate(
   transactions: RevolutTransactionDB[] | undefined,
@@ -17,6 +21,7 @@ export function useBudgetSpentUpdate(
 
       const updatedBudget: Budget = {
         ...budget,
+        // Initialize all spent fields to 0
         rent_spent: 0,
         utilities_spent: 0,
         groceries_spent: 0,
@@ -26,20 +31,18 @@ export function useBudgetSpentUpdate(
         miscellaneous_spent: 0,
         savings_spent: 0,
         dining_out_spent: 0,
-        health_fitness_spent: 0,
+        health_pharmacy_spent: 0,
+        fitness_spent: 0,
         personal_care_spent: 0,
+        travel_spent: 0,
         education_spent: 0,
         takeaway_coffee_spent: 0,
-        uncategorized_spent: 0,
         pubs_bars_spent: 0,
         clothing_apparel_spent: 0,
         home_hardware_spent: 0,
-        travel_transportation_spent: 0,
         online_services_subscriptions_spent: 0,
-        other_retail_spent: 0,
         money_transfer_spent: 0,
-        gifts_donations_spent: 0,
-        travel_spent: 0
+        delivery_takeaway_spent: 0
       };
 
       Object.entries(monthlySpending).forEach(([category, sum]) => {
@@ -47,10 +50,7 @@ export function useBudgetSpentUpdate(
         
         if (budgetCategory) {
           const spentKey = budgetCategory.spentKey;
-          const typedSpentKey = spentKey as keyof typeof updatedBudget;
-          updatedBudget[typedSpentKey] = Number(sum);
-        } else if (category === "Uncategorized") {
-          updatedBudget.uncategorized_spent = Number(sum);
+          updatedBudget[spentKey as BudgetSpentKeys] = Number(sum);
         }
       });
 

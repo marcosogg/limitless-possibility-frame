@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import transactionCategories from "../../constants/transactionCategories.json";
+import { CATEGORY_MAPPINGS } from "@/constants/categoryMappings";
 
 interface TransactionsTableProps {
   transactions: RevolutTransactionDB[];
@@ -166,12 +166,11 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.keys(transactionCategories).map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
+                      {Object.entries(CATEGORY_MAPPINGS).map(([key, { displayName }]) => (
+                        <SelectItem key={key} value={key}>
+                          {displayName}
                         </SelectItem>
                       ))}
-                      <SelectItem key="Other" value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>

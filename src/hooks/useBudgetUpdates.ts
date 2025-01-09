@@ -14,21 +14,36 @@ export function useBudgetUpdates(
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSpentChange = (spentKey: string, value: string) => {
-    if (value !== "") {
-      const numValue = parseFloat(value);
-      if (isNaN(numValue) || numValue < 0) {
-        toast({
-          title: "Invalid Input",
-          description: "Please enter a valid positive number.",
-          variant: "destructive",
-        });
+    try {
+      // Convert value to number, defaulting to 0 if empty
+      const numValue = value === "" ? 0 : Number(value);
+      
+      // Validate the number
+      if (isNaN(numValue)) {
+        console.warn("Invalid number input:", value);
         return;
       }
+      
+      // Ensure non-negative value
+      if (numValue < 0) {
+        console.warn("Negative value not allowed:", value);
+        return;
+      }
+
+      // Update the budget with the validated number
       const updatedBudget = {
         ...editedBudget,
         [spentKey]: numValue
       };
+      
       onUpdateSpent(updatedBudget);
+    } catch (error) {
+      console.error("Error updating spent value:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update value. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

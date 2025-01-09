@@ -19,17 +19,28 @@ interface TransactionFiltersProps {
 
 const categories = [
   "All",
+  "Rent",
+  "Utilities",
   "Groceries",
-  "Transportation",
-  "Dining",
-  "Shopping",
+  "Transport",
   "Entertainment",
-  "Transfers",
-  "Top-ups",
-  "Services",
-  "Bills",
-  "Other"
-];
+  "Shopping",
+  "Miscellaneous",
+  "Savings",
+  "Dining Out",
+  "Health & Pharmacy",
+  "Fitness",
+  "Personal Care",
+  "Travel",
+  "Education",
+  "Takeaway Coffee",
+  "Pubs & Bars",
+  "Clothing & Apparel",
+  "Home & Hardware",
+  "Online Services & Subscriptions",
+  "Money Transfer",
+  "Delivery & Takeaway"
+] as const;
 
 export function TransactionFilters({ onFilterChange }: TransactionFiltersProps) {
   const [category, setCategory] = useState("All");
@@ -74,7 +85,7 @@ export function TransactionFilters({ onFilterChange }: TransactionFiltersProps) 
           handleFilterChange({ category: value });
         }}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[240px]"> {/* Increased width for longer category names */}
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
         <SelectContent>

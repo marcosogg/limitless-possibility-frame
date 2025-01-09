@@ -16,7 +16,7 @@ export function ExpenseFields({ form }: ExpenseFieldsProps) {
         <h3 className="text-lg font-semibold">Monthly Expenses</h3>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
-        {CATEGORIES.filter(cat => cat.plannedKey !== 'rent').map((category) => (
+        {CATEGORIES.map((category) => (
           <FormField
             key={category.name}
             control={form.control}

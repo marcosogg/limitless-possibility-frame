@@ -30,28 +30,32 @@ import { ExpenseFields } from "./form-fields/ExpenseFields";
 import { CATEGORIES } from "@/constants/budget";
 import { useState } from "react";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   month: z.string(),
   year: z.string(),
   salary: z.coerce.number(),
   bonus: z.coerce.number(),
   rent: z.coerce.number(),
-  groceries_supermarkets: z.coerce.number(),
-  restaurants_cafes_takeaway: z.coerce.number(),
+  utilities: z.coerce.number(),
+  groceries: z.coerce.number(),
+  transport: z.coerce.number(),
+  entertainment: z.coerce.number(),
+  shopping: z.coerce.number(),
+  miscellaneous: z.coerce.number(),
+  savings: z.coerce.number(),
+  dining_out: z.coerce.number(),
+  health_pharmacy: z.coerce.number(),
+  fitness: z.coerce.number(),
+  personal_care: z.coerce.number(),
+  travel: z.coerce.number(),
+  education: z.coerce.number(),
+  takeaway_coffee: z.coerce.number(),
   pubs_bars: z.coerce.number(),
   clothing_apparel: z.coerce.number(),
   home_hardware: z.coerce.number(),
-  travel_transportation: z.coerce.number(),
-  health_pharmacy: z.coerce.number(),
-  entertainment_leisure: z.coerce.number(),
   online_services_subscriptions: z.coerce.number(),
-  other_retail: z.coerce.number(),
   money_transfer: z.coerce.number(),
-  education: z.coerce.number(),
-  personal_care: z.coerce.number(),
-  utilities_bills: z.coerce.number(),
-  miscellaneous: z.coerce.number(),
-  takeaway_coffee: z.coerce.number(),
+  delivery_takeaway: z.coerce.number(),
 });
 
 interface BudgetFormProps {
