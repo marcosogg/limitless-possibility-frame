@@ -4,12 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { sumMonthlySpending } from "@/utils/budgetCalculations";
 import { Budget } from "@/types/budget";
 import { RevolutTransactionDB } from "@/types/revolut";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CATEGORIES } from "@/constants/budget";
 import { useToast } from "@/hooks/use-toast";
 import { PlannedBudgetCard } from "./PlannedBudgetCard";
-import { BudgetProgressItem } from "./BudgetProgressItem";
+import { CurrentStatusCard } from "./CurrentStatusCard";
 import { useBudgetUpdates } from "@/hooks/useBudgetUpdates";
 
 interface BudgetCardsProps {
