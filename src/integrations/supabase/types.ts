@@ -50,141 +50,165 @@ export type Database = {
       }
       budgets: {
         Row: {
-          bonus: number
-          clothing_apparel_spent: number
+          bonus: number | null
+          clothing_apparel: number | null
+          clothing_apparel_spent: number | null
           created_at: string | null
-          dining_out: number
-          dining_out_spent: number
-          education: number
-          education_spent: number
-          entertainment: number
-          entertainment_spent: number
-          gifts_donations: number
-          gifts_donations_spent: number
-          groceries: number
-          groceries_spent: number
-          health_fitness: number
-          health_fitness_spent: number
-          home_hardware_spent: number
+          delivery_takeaway: number | null
+          delivery_takeaway_spent: number | null
+          dining_out: number | null
+          dining_out_spent: number | null
+          education: number | null
+          education_spent: number | null
+          entertainment: number | null
+          entertainment_spent: number | null
+          fitness: number | null
+          fitness_spent: number | null
+          groceries: number | null
+          groceries_spent: number | null
+          health_pharmacy: number | null
+          health_pharmacy_spent: number | null
+          home_hardware: number | null
+          home_hardware_spent: number | null
           id: string
-          miscellaneous: number
-          miscellaneous_spent: number
-          money_transfer_spent: number
+          miscellaneous: number | null
+          miscellaneous_spent: number | null
+          money_transfer: number | null
+          money_transfer_spent: number | null
           month: number
-          online_services_subscriptions_spent: number
-          other_retail_spent: number
-          personal_care: number
-          personal_care_spent: number
-          pubs_bars_spent: number
-          rent: number
-          rent_spent: number
-          salary: number
-          savings: number
-          savings_spent: number
-          shopping: number
-          shopping_spent: number
-          takeaway_coffee_spent: number
-          transport: number
-          transport_spent: number
-          travel: number
-          travel_spent: number
-          travel_transportation_spent: number
-          uncategorized_spent: number
+          online_services_subscriptions: number | null
+          online_services_subscriptions_spent: number | null
+          personal_care: number | null
+          personal_care_spent: number | null
+          pubs_bars: number | null
+          pubs_bars_spent: number | null
+          rent: number | null
+          rent_spent: number | null
+          salary: number | null
+          savings: number | null
+          savings_spent: number | null
+          shopping: number | null
+          shopping_spent: number | null
+          takeaway_coffee: number | null
+          takeaway_coffee_spent: number | null
+          transport: number | null
+          transport_spent: number | null
+          travel: number | null
+          travel_spent: number | null
+          travel_transportation: number | null
+          travel_transportation_spent: number | null
+          uncategorized_spent: number | null
           user_id: string
-          utilities: number
-          utilities_spent: number
+          utilities: number | null
+          utilities_spent: number | null
           year: number
         }
         Insert: {
-          bonus?: number
-          clothing_apparel_spent?: number
+          bonus?: number | null
+          clothing_apparel?: number | null
+          clothing_apparel_spent?: number | null
           created_at?: string | null
-          dining_out?: number
-          dining_out_spent?: number
-          education?: number
-          education_spent?: number
-          entertainment?: number
-          entertainment_spent?: number
-          gifts_donations?: number
-          gifts_donations_spent?: number
-          groceries?: number
-          groceries_spent?: number
-          health_fitness?: number
-          health_fitness_spent?: number
-          home_hardware_spent?: number
+          delivery_takeaway?: number | null
+          delivery_takeaway_spent?: number | null
+          dining_out?: number | null
+          dining_out_spent?: number | null
+          education?: number | null
+          education_spent?: number | null
+          entertainment?: number | null
+          entertainment_spent?: number | null
+          fitness?: number | null
+          fitness_spent?: number | null
+          groceries?: number | null
+          groceries_spent?: number | null
+          health_pharmacy?: number | null
+          health_pharmacy_spent?: number | null
+          home_hardware?: number | null
+          home_hardware_spent?: number | null
           id?: string
-          miscellaneous?: number
-          miscellaneous_spent?: number
-          money_transfer_spent?: number
+          miscellaneous?: number | null
+          miscellaneous_spent?: number | null
+          money_transfer?: number | null
+          money_transfer_spent?: number | null
           month: number
-          online_services_subscriptions_spent?: number
-          other_retail_spent?: number
-          personal_care?: number
-          personal_care_spent?: number
-          pubs_bars_spent?: number
-          rent?: number
-          rent_spent?: number
-          salary?: number
-          savings?: number
-          savings_spent?: number
-          shopping?: number
-          shopping_spent?: number
-          takeaway_coffee_spent?: number
-          transport?: number
-          transport_spent?: number
-          travel?: number
-          travel_spent?: number
-          travel_transportation_spent?: number
-          uncategorized_spent?: number
+          online_services_subscriptions?: number | null
+          online_services_subscriptions_spent?: number | null
+          personal_care?: number | null
+          personal_care_spent?: number | null
+          pubs_bars?: number | null
+          pubs_bars_spent?: number | null
+          rent?: number | null
+          rent_spent?: number | null
+          salary?: number | null
+          savings?: number | null
+          savings_spent?: number | null
+          shopping?: number | null
+          shopping_spent?: number | null
+          takeaway_coffee?: number | null
+          takeaway_coffee_spent?: number | null
+          transport?: number | null
+          transport_spent?: number | null
+          travel?: number | null
+          travel_spent?: number | null
+          travel_transportation?: number | null
+          travel_transportation_spent?: number | null
+          uncategorized_spent?: number | null
           user_id: string
-          utilities?: number
-          utilities_spent?: number
+          utilities?: number | null
+          utilities_spent?: number | null
           year: number
         }
         Update: {
-          bonus?: number
-          clothing_apparel_spent?: number
+          bonus?: number | null
+          clothing_apparel?: number | null
+          clothing_apparel_spent?: number | null
           created_at?: string | null
-          dining_out?: number
-          dining_out_spent?: number
-          education?: number
-          education_spent?: number
-          entertainment?: number
-          entertainment_spent?: number
-          gifts_donations?: number
-          gifts_donations_spent?: number
-          groceries?: number
-          groceries_spent?: number
-          health_fitness?: number
-          health_fitness_spent?: number
-          home_hardware_spent?: number
+          delivery_takeaway?: number | null
+          delivery_takeaway_spent?: number | null
+          dining_out?: number | null
+          dining_out_spent?: number | null
+          education?: number | null
+          education_spent?: number | null
+          entertainment?: number | null
+          entertainment_spent?: number | null
+          fitness?: number | null
+          fitness_spent?: number | null
+          groceries?: number | null
+          groceries_spent?: number | null
+          health_pharmacy?: number | null
+          health_pharmacy_spent?: number | null
+          home_hardware?: number | null
+          home_hardware_spent?: number | null
           id?: string
-          miscellaneous?: number
-          miscellaneous_spent?: number
-          money_transfer_spent?: number
+          miscellaneous?: number | null
+          miscellaneous_spent?: number | null
+          money_transfer?: number | null
+          money_transfer_spent?: number | null
           month?: number
-          online_services_subscriptions_spent?: number
-          other_retail_spent?: number
-          personal_care?: number
-          personal_care_spent?: number
-          pubs_bars_spent?: number
-          rent?: number
-          rent_spent?: number
-          salary?: number
-          savings?: number
-          savings_spent?: number
-          shopping?: number
-          shopping_spent?: number
-          takeaway_coffee_spent?: number
-          transport?: number
-          transport_spent?: number
-          travel?: number
-          travel_spent?: number
-          travel_transportation_spent?: number
-          uncategorized_spent?: number
+          online_services_subscriptions?: number | null
+          online_services_subscriptions_spent?: number | null
+          personal_care?: number | null
+          personal_care_spent?: number | null
+          pubs_bars?: number | null
+          pubs_bars_spent?: number | null
+          rent?: number | null
+          rent_spent?: number | null
+          salary?: number | null
+          savings?: number | null
+          savings_spent?: number | null
+          shopping?: number | null
+          shopping_spent?: number | null
+          takeaway_coffee?: number | null
+          takeaway_coffee_spent?: number | null
+          transport?: number | null
+          transport_spent?: number | null
+          travel?: number | null
+          travel_spent?: number | null
+          travel_transportation?: number | null
+          travel_transportation_spent?: number | null
+          uncategorized_spent?: number | null
           user_id?: string
-          utilities?: number
-          utilities_spent?: number
+          utilities?: number | null
+          utilities_spent?: number | null
           year?: number
         }
         Relationships: []
