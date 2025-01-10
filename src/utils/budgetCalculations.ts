@@ -2,7 +2,7 @@ import { Budget } from "@/types/budget";
 import { RevolutTransactionDB } from "@/types/revolut";
 
 export const calculatePercentage = (spent: number, planned: number): number => {
-  if (planned === 0) return 0;
+  if (spent === 0 || planned === 0) return 0;
   return (spent / planned) * 100;
 };
 

@@ -56,7 +56,6 @@ export interface Budget {
   online_services_subscriptions_spent: number;
   money_transfer_spent: number;
   delivery_takeaway_spent: number;
-  uncategorized_spent: number;
 }
 
 export type BudgetInsert = Omit<Budget, 'id' | 'created_at'>;

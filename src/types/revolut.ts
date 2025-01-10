@@ -1,22 +1,24 @@
-export interface RevolutTransaction {
-  type: string;
-  product: string;
-  startedDate: string;
-  completedDate: string;
+export interface SimpleTransaction {
+  date: Date;
+  amount: number;
   description: string;
-  amount: string;
-  fee: string;
-  currency: string;
-  state: string;
-  balance: string;
+  category: string;
+  uploadDate: Date;
 }
 
-export interface RevolutTransactionDB {
+export interface RevolutTransactionDB extends SimpleTransaction {
   id: string;
-  date: string;
-  description: string;
-  amount: number;
-  currency: string;
-  category: string | null;
-  profile_id: string;
+}
+
+export interface RevolutCSVRow {
+  Type: string;
+  Product: string;
+  Started_Date: string;
+  Completed_Date: string;
+  Description: string;
+  Amount: string;
+  Fee: string;
+  Currency: string;
+  State: string;
+  Balance: string;
 }

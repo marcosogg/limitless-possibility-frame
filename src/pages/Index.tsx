@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Bell, FileInput } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +8,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import { BudgetOverview } from "@/components/dashboard/BudgetOverview";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BudgetCards } from "@/components/dashboard/BudgetCards";
+import { OverBudgetWarning } from "@/components/dashboard/OverBudgetWarning";
+import { RevolutAnalysis } from "@/components/revolut/RevolutAnalysis";
 import { CATEGORIES } from "@/constants/budget";
 import type { Budget } from "@/types/budget";
 import { formatCurrency } from "@/lib/utils";
@@ -56,18 +57,15 @@ export default function Index() {
       if (error) throw error;
 
       if (data) {
-        // Ensure all required spent fields are initialized
+        // Initialize all category spent values with defaults
         const budgetWithDefaults: Budget = {
           ...data,
-          takeaway_coffee_spent: data.takeaway_coffee_spent || 0,
-          uncategorized_spent: data.uncategorized_spent || 0,
-          pubs_bars_spent: data.pubs_bars_spent || 0,
-          clothing_apparel_spent: data.clothing_apparel_spent || 0,
-          home_hardware_spent: data.home_hardware_spent || 0,
-          travel_transportation_spent: data.travel_transportation_spent || 0,
-          online_services_subscriptions_spent: data.online_services_subscriptions_spent || 0,
-          other_retail_spent: data.other_retail_spent || 0,
-          money_transfer_spent: data.money_transfer_spent || 0,
+          ...Object.fromEntries(
+            CATEGORIES.map(category => [
+              category.spentKey,
+              data[category.spentKey as keyof typeof data] || 0
+            ])
+          )
         };
         setBudget(budgetWithDefaults);
       } else {
@@ -99,10 +97,6 @@ export default function Index() {
     return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.spentKey as keyof Budget]), 0);
   };
 
-  const handleUpdateSpent = (updatedBudget: Budget) => {
-    setBudget(updatedBudget);
-  };
-
   const navigateToCreateBudget = () => {
     navigate("/createbudget", {
       state: { month: selectedMonth, year: selectedYear }
@@ -132,29 +126,34 @@ export default function Index() {
               onClick={navigateToCreateBudget}
               className="bg-[#1877F2] hover:brightness-95 text-white"
             >
-              Create New Budget
+              <Plus className="h-4 w-4 mr-2" />
+              New Budget
             </Button>
             <Button 
               onClick={handleManageBillReminders}
               className="bg-[#1877F2] hover:brightness-95 text-white"
             >
-              Manage Bill Reminders
+              <Bell className="h-4 w-4 mr-2" />
+              Reminders
             </Button>
             <Button 
               onClick={handleImportStatement}
               className="bg-[#1877F2] hover:brightness-95 text-white"
             >
-              Import Revolut Statement
+              <FileInput className="h-4 w-4 mr-2" />
+              Import Statement
             </Button>
           </div>
         </div>
 
-        <MonthYearPicker
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onMonthChange={setSelectedMonth}
-          onYearChange={setSelectedYear}
-        />
+        <div className="flex items-center gap-4">
+          <MonthYearPicker
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+          />
+        </div>
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -168,20 +167,23 @@ export default function Index() {
               currentSpending={calculateTotalSpent()}
             />
             {isOverBudget && (
-              <div className="flex items-center gap-3 bg-[#FFF3CD] text-[#664D03] p-3 rounded-lg text-[13px] border border-[#FFE69C]">
-                <AlertCircle className="h-5 w-5" />
-                <p>
-                  You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
-                </p>
-              </div>
+              <OverBudgetWarning
+                budget={budget}
+                overspentCategories={overspentCategories}
+              />
             )}
             <BudgetCards
               budget={budget}
-              onUpdateSpent={handleUpdateSpent}
               selectedMonth={selectedMonth}
               selectedYear={selectedYear}
             />
             <BillRemindersCard />
+            <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold mb-4">Revolut Transactions Analysis</h2>
+                <RevolutAnalysis />
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
