@@ -10,34 +10,27 @@ export function BudgetOverview({ monthlyIncome, plannedBudget, currentSpending }
   const isOverBudget = currentSpending > plannedBudget;
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
-      <h1 className="text-2xl font-semibold mb-4">Budget Overview</h1>
-      <div className="grid md:grid-cols-3 gap-6">
+    <div className="bg-white rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.1)] p-4">
+      <h2 className="text-[17px] font-semibold text-[#1C1E21] mb-4">Budget Overview</h2>
+      <div className="grid md:grid-cols-3 gap-4">
         {/* Monthly Income Card */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-blue-700 mb-1">
-            <DollarSign className="w-4 h-4" />
-            <span className="font-medium">Monthly Income</span>
-          </div>
-          <span className="text-2xl font-bold">€{monthlyIncome.toFixed(2)}</span>
+        <div className="bg-white rounded-lg p-4 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+          <div className="text-[13px] font-medium text-[#65676B]">Monthly Income</div>
+          <div className="text-[20px] font-semibold text-[#1C1E21] mt-1">€{monthlyIncome.toFixed(2)}</div>
         </div>
 
         {/* Planned Budget Card */}
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-purple-700 mb-1">
-            <PiggyBank className="w-4 h-4" />
-            <span className="font-medium">Planned Budget</span>
-          </div>
-          <span className="text-2xl font-bold">€{plannedBudget.toFixed(2)}</span>
+        <div className="bg-white rounded-lg p-4 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+          <div className="text-[13px] font-medium text-[#65676B]">Planned Budget</div>
+          <div className="text-[20px] font-semibold text-[#1C1E21] mt-1">€{plannedBudget.toFixed(2)}</div>
         </div>
 
         {/* Current Spending Card */}
-        <div className={`rounded-lg p-4 ${isOverBudget ? 'bg-red-50' : 'bg-green-50'}`}>
-          <div className={`flex items-center gap-2 mb-1 ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
-            <AlertCircle className="w-4 h-4" />
-            <span className="font-medium">Current Spending</span>
+        <div className="bg-white rounded-lg p-4 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+          <div className="text-[13px] font-medium text-[#65676B]">Current Spending</div>
+          <div className={`text-[20px] font-semibold mt-1 ${isOverBudget ? 'text-[#FA383E]' : 'text-[#1C1E21]'}`}>
+            €{currentSpending.toFixed(2)}
           </div>
-          <span className="text-2xl font-bold">€{currentSpending.toFixed(2)}</span>
         </div>
       </div>
     </div>

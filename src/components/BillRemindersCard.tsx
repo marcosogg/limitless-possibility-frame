@@ -1,19 +1,11 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { EditBillReminderDialog } from "./bill-reminder/EditBillReminderDialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PenSquare, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,30 +22,42 @@ interface BillReminder {
   provider_name: string;
   due_date: number;
   amount: number;
-  notes: string | null;
   reminders_enabled: boolean;
-  phone_number: string | null;
 }
 
 export function BillRemindersCard() {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [reminders, setReminders] = useState<BillReminder[]>([]);
   const [selectedReminder, setSelectedReminder] = useState<BillReminder | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const { data: billReminders, isLoading } = useQuery({
-    queryKey: ['billReminders'],
-    queryFn: async () => {
+  const fetchReminders = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('bill_reminders')
-        .select('id, provider_name, due_date, amount, notes, reminders_enabled, phone_number')
-        .order('due_date', { ascending: true });
+        .select('*')
+        .eq('user_id', user.id);
 
       if (error) throw error;
-      return data as BillReminder[];
-    },
-  });
+      setReminders(data);
+    } catch (error) {
+      console.error('Error fetching reminders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch bill reminders",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (reminder: BillReminder) => {
+    setSelectedReminder(reminder);
+    navigate(`/billreminders/edit/${reminder.id}`);
+  };
 
   const handleDelete = async () => {
     if (!selectedReminder) return;
@@ -71,94 +75,80 @@ export function BillRemindersCard() {
         description: "Bill reminder deleted successfully",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['billReminders'] });
-    } catch (error: any) {
-      console.error('Delete error:', error);
+      // Refresh the reminders list
+      fetchReminders();
+    } catch (error) {
+      console.error('Error deleting reminder:', error);
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to delete bill reminder",
+        variant: "destructive",
       });
     } finally {
-      setIsDeleteDialogOpen(false);
+      setShowDeleteDialog(false);
       setSelectedReminder(null);
     }
   };
 
+  useEffect(() => {
+    fetchReminders();
+  }, []);
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Bill Reminders</CardTitle>
+    <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+      <CardHeader className="p-4">
+        <CardTitle className="text-[17px] font-semibold text-[#1C1E21]">Bill Reminders</CardTitle>
       </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center p-4">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        ) : billReminders && billReminders.length > 0 ? (
+      <CardContent className="p-4 pt-0">
+        <div className="rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Provider</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>SMS Reminder</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="bg-[#F0F2F5] text-[13px] text-[#65676B] font-medium h-9">Provider</TableHead>
+                <TableHead className="bg-[#F0F2F5] text-[13px] text-[#65676B] font-medium h-9">Due Date</TableHead>
+                <TableHead className="bg-[#F0F2F5] text-[13px] text-[#65676B] font-medium h-9">Amount</TableHead>
+                <TableHead className="bg-[#F0F2F5] text-[13px] text-[#65676B] font-medium h-9">SMS Reminder</TableHead>
+                <TableHead className="bg-[#F0F2F5] text-[13px] text-[#65676B] font-medium h-9">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {billReminders.map((bill) => (
-                <TableRow key={bill.id}>
-                  <TableCell>{bill.provider_name}</TableCell>
-                  <TableCell>Day {bill.due_date}</TableCell>
-                  <TableCell>€{bill.amount.toFixed(2)}</TableCell>
-                  <TableCell>{bill.reminders_enabled ? 'YES' : 'NO'}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedReminder(bill);
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedReminder(bill);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              {reminders.map((reminder) => (
+                <TableRow key={reminder.id} className="hover:bg-[#F2F3F5] transition-colors">
+                  <TableCell className="text-[13px] text-[#1C1E21] py-2">{reminder.provider_name}</TableCell>
+                  <TableCell className="text-[13px] text-[#1C1E21] py-2">Day {reminder.due_date}</TableCell>
+                  <TableCell className="text-[13px] text-[#1C1E21] py-2">€{reminder.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-[13px] text-[#1C1E21] py-2">{reminder.reminders_enabled ? 'YES' : 'NO'}</TableCell>
+                  <TableCell className="py-2">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-[#1877F2] hover:bg-[#F2F3F5] h-8 w-8"
+                        onClick={() => handleEdit(reminder)}
+                      >
+                        <PenSquare className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-[#FA383E] hover:bg-[#F2F3F5] h-8 w-8"
+                        onClick={() => {
+                          setSelectedReminder(reminder);
+                          setShowDeleteDialog(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        ) : (
-          <p className="text-center text-muted-foreground py-4">
-            No bill reminders found
-          </p>
-        )}
+        </div>
       </CardContent>
 
-      {selectedReminder && (
-        <EditBillReminderDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          reminder={selectedReminder}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['billReminders'] });
-            setSelectedReminder(null);
-          }}
-        />
-      )}
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -168,7 +158,7 @@ export function BillRemindersCard() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

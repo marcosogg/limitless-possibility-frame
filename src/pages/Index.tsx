@@ -109,15 +109,45 @@ export default function Index() {
     });
   };
 
+  const handleManageBillReminders = () => {
+    navigate("/billreminders");
+  };
+
+  const handleImportStatement = () => {
+    navigate("/revolut-import");
+  };
+
   const overspentCategories = budget
     ? CATEGORIES.filter(cat => budget[cat.spentKey as keyof Budget] > budget[cat.plannedKey as keyof Budget])
     : [];
   const isOverBudget = overspentCategories.length > 0;
 
   return (
-    <div className="min-h-screen gradient-bg p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <DashboardHeader />
+    <div className="min-h-screen bg-[#F0F2F5] p-4 md:p-8">
+      <div className="max-w-[1095px] mx-auto space-y-4">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-[20px] font-semibold text-[#1C1E21]">Monthly Budget Overview</h1>
+          <div className="flex gap-2">
+            <Button 
+              onClick={navigateToCreateBudget}
+              className="bg-[#1877F2] hover:brightness-95 text-white"
+            >
+              Create New Budget
+            </Button>
+            <Button 
+              onClick={handleManageBillReminders}
+              className="bg-[#1877F2] hover:brightness-95 text-white"
+            >
+              Manage Bill Reminders
+            </Button>
+            <Button 
+              onClick={handleImportStatement}
+              className="bg-[#1877F2] hover:brightness-95 text-white"
+            >
+              Import Revolut Statement
+            </Button>
+          </div>
+        </div>
 
         <MonthYearPicker
           selectedMonth={selectedMonth}
@@ -128,24 +158,22 @@ export default function Index() {
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#1877F2]" />
           </div>
         ) : budget ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <BudgetOverview
               monthlyIncome={Number(budget.salary) + Number(budget.bonus)}
               plannedBudget={calculateTotalPlanned()}
               currentSpending={calculateTotalSpent()}
             />
             {isOverBudget && (
-              <Card className="bg-red-100 border-red-500 text-red-800 shadow-sm">
-                <CardContent className="p-4 flex items-center">
-                  <AlertCircle className="h-5 w-5 mr-2" />
-                  <p className="font-semibold text-sm">
-                    You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="flex items-center gap-3 bg-[#FFF3CD] text-[#664D03] p-3 rounded-lg text-[13px] border border-[#FFE69C]">
+                <AlertCircle className="h-5 w-5" />
+                <p>
+                  You are over budget in {overspentCategories.length} categories: {overspentCategories.map(cat => cat.name).join(', ')}
+                </p>
+              </div>
             )}
             <BudgetCards
               budget={budget}
@@ -156,12 +184,12 @@ export default function Index() {
             <BillRemindersCard />
           </div>
         ) : (
-          <Card className="bg-white/10 backdrop-blur-lg text-white">
+          <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg mb-4">No budget found for this month</p>
+              <p className="text-[15px] text-[#65676B] mb-4">No budget found for this month</p>
               <Button
                 onClick={navigateToCreateBudget}
-                className="bg-white text-indigo-600 hover:bg-gray-100"
+                className="bg-[#1877F2] hover:brightness-95 text-white"
               >
                 Create Budget
               </Button>
