@@ -1,24 +1,31 @@
-export interface SimpleTransaction {
+export interface RevolutTransaction {
+  id?: string;
+  userId?: string;
   date: Date;
-  amount: number;
   description: string;
+  amount: number;
   category: string;
-  uploadDate: Date;
+  originalCategory: string;
+  createdAt?: Date;
 }
 
-export interface RevolutTransactionDB extends SimpleTransaction {
-  id: string;
+export interface RevolutImportSettings {
+  budgetUpdateMode: 'override' | 'add';
+  categoryMappings: Record<string, string>;
+  allowFutureMonths: boolean;
 }
 
-export interface RevolutCSVRow {
-  Type: string;
-  Product: string;
-  Started_Date: string;
-  Completed_Date: string;
-  Description: string;
-  Amount: string;
-  Fee: string;
-  Currency: string;
-  State: string;
-  Balance: string;
+export interface MonthlyApproval {
+  id?: string;
+  userId?: string;
+  month: number;
+  year: number;
+  approvedAt?: Date;
+}
+
+export interface ImportResult {
+  success: boolean;
+  transactions: RevolutTransaction[];
+  errors: string[];
+  unmappedCategories: string[];
 }
