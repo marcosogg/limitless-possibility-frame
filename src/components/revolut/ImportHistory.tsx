@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -22,7 +22,8 @@ interface MonthlyApproval {
   id: string;
   month: number;
   year: number;
-  created_at: string;
+  created_at: string | null;
+  approved_at: string | null;
   revolut_transactions: { count: number };
 }
 
@@ -40,12 +41,16 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
 
       const { data, error } = await supabase
         .from('monthly_approvals')
-        .select('*, revolut_transactions:revolut_transactions!monthly_approvals_id_fkey(count)')
+        .select('*, revolut_transactions!monthly_approval_id(count)')
         .eq('user_id', user.id)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
 
       if (error) throw error;
+      
+      // Debug log to see the actual data structure
+      console.log('Approvals data:', data);
+      
       setApprovals(data || []);
     } catch (error) {
       toast({
@@ -65,20 +70,19 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      // Delete transactions first (they reference the approval)
       const { error: deleteTransactionsError } = await supabase
         .from('revolut_transactions')
         .delete()
-        .eq('user_id', user.id)
-        .eq('month', selectedApproval.month)
-        .eq('year', selectedApproval.year);
+        .match({ monthly_approval_id: selectedApproval.id });
 
       if (deleteTransactionsError) throw deleteTransactionsError;
 
+      // Then delete the approval
       const { error: deleteApprovalError } = await supabase
         .from('monthly_approvals')
         .delete()
-        .eq('id', selectedApproval.id)
-        .eq('user_id', user.id);
+        .match({ id: selectedApproval.id });
 
       if (deleteApprovalError) throw deleteApprovalError;
 
@@ -103,6 +107,17 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
     loadApprovals();
   }, []);
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      return format(parseISO(dateString), 'PPP');
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'Invalid date';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Import History</h3>
@@ -126,7 +141,7 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
                   {approval.revolut_transactions?.count || 0} transactions
                 </div>
                 <div className="text-xs text-gray-400">
-                  Imported on {format(new Date(approval.created_at), 'PPP')}
+                  Imported on {formatDate(approval.created_at)}
                 </div>
               </div>
               <Button

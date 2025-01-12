@@ -156,7 +156,7 @@ export async function processRevolutFile(file: File): Promise<ImportResult> {
               description: `${description} (from file: ${file.name})`,
               amount,
               category: mappedCategory,
-              originalCategory: row.Type
+              original_category: row.Type
             });
           } catch (error) {
             errors.push(`Row ${index + 1}: ${error.message}`);
@@ -231,32 +231,37 @@ export async function approveMonthlyAnalysis(
     throw new Error(`You have already approved transactions for ${month}/${year}. Please undo the previous approval first.`);
   }
 
-  const { error: approvalError } = await supabase
+  // Create monthly approval first
+  const { data: approval, error: approvalError } = await supabase
     .from('monthly_approvals')
     .insert({
       month,
       year,
       user_id: user.id
-    });
+    })
+    .select()
+    .single();
 
   if (approvalError) throw approvalError;
+  if (!approval) throw new Error('Failed to create monthly approval');
 
-  // Add user_id to each transaction
-  const transactionsWithUser = transactions.map(transaction => ({
+  // Add user_id and monthly_approval_id to each transaction
+  const transactionsWithRefs = transactions.map(transaction => ({
     ...transaction,
-    user_id: user.id
+    user_id: user.id,
+    monthly_approval_id: approval.id
   }));
 
   const { error: transactionError } = await supabase
     .from('revolut_transactions')
-    .insert(transactionsWithUser);
+    .insert(transactionsWithRefs);
 
   if (transactionError) {
     // Rollback approval if transaction insert fails
     await supabase
       .from('monthly_approvals')
       .delete()
-      .match({ user_id: user.id, month, year });
+      .match({ id: approval.id });
     throw transactionError;
   }
 }
@@ -270,17 +275,33 @@ export async function undoMonthlyApproval(
     throw new Error('Can only undo current month approvals');
   }
 
-  const { error: approvalError } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  // Get the approval first
+  const { data: approval } = await supabase
     .from('monthly_approvals')
-    .delete()
-    .match({ month, year });
+    .select()
+    .match({ user_id: user.id, month, year })
+    .single();
 
-  if (approvalError) throw approvalError;
+  if (!approval) {
+    throw new Error(`No approval found for ${month}/${year}`);
+  }
 
+  // Delete transactions first (they reference the approval)
   const { error: transactionError } = await supabase
     .from('revolut_transactions')
     .delete()
-    .match({ month, year });
+    .match({ monthly_approval_id: approval.id });
 
   if (transactionError) throw transactionError;
+
+  // Then delete the approval
+  const { error: approvalError } = await supabase
+    .from('monthly_approvals')
+    .delete()
+    .match({ id: approval.id });
+
+  if (approvalError) throw approvalError;
 } 

@@ -1,18 +1,13 @@
 export interface RevolutTransaction {
   id?: string;
-  userId?: string;
+  user_id?: string;
+  monthly_approval_id?: string;
   date: Date;
   description: string;
   amount: number;
   category: string;
-  originalCategory: string;
-  createdAt?: Date;
-}
-
-export interface RevolutImportSettings {
-  budgetUpdateMode: 'override' | 'add';
-  categoryMappings: Record<string, string>;
-  allowFutureMonths: boolean;
+  original_category: string;
+  created_at?: Date;
 }
 
 export interface MonthlyApproval {
@@ -21,6 +16,13 @@ export interface MonthlyApproval {
   month: number;
   year: number;
   approvedAt?: Date;
+  transactions?: RevolutTransaction[];
+}
+
+export interface RevolutImportSettings {
+  budgetUpdateMode: 'override' | 'add';
+  categoryMappings: Record<string, string>;
+  allowFutureMonths: boolean;
 }
 
 export interface ImportResult {
@@ -28,4 +30,5 @@ export interface ImportResult {
   transactions: RevolutTransaction[];
   errors: string[];
   unmappedCategories: string[];
+  warnings?: string[];
 }
