@@ -217,25 +217,46 @@ export async function approveMonthlyAnalysis(
   year: number,
   transactions: RevolutTransaction[]
 ): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  // Check if approval already exists
+  const { data: existingApproval } = await supabase
+    .from('monthly_approvals')
+    .select()
+    .match({ user_id: user.id, month, year })
+    .single();
+
+  if (existingApproval) {
+    throw new Error(`You have already approved transactions for ${month}/${year}. Please undo the previous approval first.`);
+  }
+
   const { error: approvalError } = await supabase
     .from('monthly_approvals')
     .insert({
       month,
-      year
+      year,
+      user_id: user.id
     });
 
   if (approvalError) throw approvalError;
 
+  // Add user_id to each transaction
+  const transactionsWithUser = transactions.map(transaction => ({
+    ...transaction,
+    user_id: user.id
+  }));
+
   const { error: transactionError } = await supabase
     .from('revolut_transactions')
-    .insert(transactions);
+    .insert(transactionsWithUser);
 
   if (transactionError) {
     // Rollback approval if transaction insert fails
     await supabase
       .from('monthly_approvals')
       .delete()
-      .match({ month, year });
+      .match({ user_id: user.id, month, year });
     throw transactionError;
   }
 }

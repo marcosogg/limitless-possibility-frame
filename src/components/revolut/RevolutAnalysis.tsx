@@ -26,7 +26,7 @@ export const RevolutAnalysis = () => {
       const { data, error: fetchError } = await supabase
         .from('revolut_transactions')
         .select('*')
-        .eq('profile_id', user.id);
+        .eq('user_id', user.id);
 
       if (fetchError) throw fetchError;
 
