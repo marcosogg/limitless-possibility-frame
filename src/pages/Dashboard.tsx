@@ -61,9 +61,17 @@ export default function Dashboard() {
         .eq('user_id', user.id)
         .eq('month', currentMonth)
         .eq('year', currentYear)
-        .single();
+        .maybeSingle();
 
       if (budgetError) throw budgetError;
+
+      if (budgetData) {
+        setBudget(budgetData);
+        setTotalIncome(budgetData.salary + (budgetData.bonus || 0));
+      } else {
+        setBudget(null);
+        setTotalIncome(0);
+      }
 
       const { data: spendingData, error: spendingError } = await supabase
         .from('revolut_transactions')
@@ -74,8 +82,6 @@ export default function Dashboard() {
 
       if (spendingError) throw spendingError;
 
-      setBudget(budgetData);
-      setTotalIncome(budgetData?.salary + (budgetData?.bonus || 0) || 0);
       setCurrentSpending(
         spendingData?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0
       );

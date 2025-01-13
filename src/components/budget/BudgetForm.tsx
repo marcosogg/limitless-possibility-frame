@@ -4,6 +4,7 @@ import * as z from "zod";
 import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Budget } from "@/types/budget";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import { Form } from "@/components/ui/form";
 import { MonthYearFields } from "./form-fields/MonthYearFields";
 import { IncomeFields } from "./form-fields/IncomeFields";
 import { ExpenseFields } from "./form-fields/ExpenseFields";
+import { SavingsFields } from "./form-fields/SavingsFields";
 import { CATEGORIES } from "@/constants/budget";
 import { useState } from "react";
 
@@ -62,27 +64,74 @@ interface BudgetFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   defaultMonth?: number;
   defaultYear?: number;
+  initialValues?: Budget;
+  mode?: 'create' | 'edit';
 }
 
-const getDefaultValues = (defaultMonth?: number, defaultYear?: number) => {
-  const defaultValues = {
-    month: defaultMonth?.toString() || "1",
-    year: defaultYear?.toString() || new Date().getFullYear().toString(),
-    salary: 2700,
+const getDefaultValues = (defaultMonth?: number, defaultYear?: number, initialValues?: Budget) => {
+  if (initialValues) {
+    return {
+      month: initialValues.month.toString(),
+      year: initialValues.year.toString(),
+      salary: initialValues.salary,
+      bonus: initialValues.bonus,
+      rent: initialValues.rent,
+      utilities: initialValues.utilities,
+      groceries: initialValues.groceries,
+      transport: initialValues.transport,
+      entertainment: initialValues.entertainment,
+      shopping: initialValues.shopping,
+      miscellaneous: initialValues.miscellaneous,
+      savings: initialValues.savings,
+      dining_out: initialValues.dining_out,
+      health_pharmacy: initialValues.health_pharmacy,
+      fitness: initialValues.fitness,
+      personal_care: initialValues.personal_care,
+      travel: initialValues.travel,
+      education: initialValues.education,
+      takeaway_coffee: initialValues.takeaway_coffee,
+      pubs_bars: initialValues.pubs_bars,
+      clothing_apparel: initialValues.clothing_apparel,
+      home_hardware: initialValues.home_hardware,
+      online_services_subscriptions: initialValues.online_services_subscriptions,
+      money_transfer: initialValues.money_transfer,
+      delivery_takeaway: initialValues.delivery_takeaway,
+    };
+  }
+
+  return {
+    month: defaultMonth?.toString() || "",
+    year: defaultYear?.toString() || "",
+    salary: 0,
     bonus: 0,
+    rent: 0,
+    utilities: 0,
+    groceries: 0,
+    transport: 0,
+    entertainment: 0,
+    shopping: 0,
+    miscellaneous: 0,
+    savings: 0,
+    dining_out: 0,
+    health_pharmacy: 0,
+    fitness: 0,
+    personal_care: 0,
+    travel: 0,
+    education: 0,
+    takeaway_coffee: 0,
+    pubs_bars: 0,
+    clothing_apparel: 0,
+    home_hardware: 0,
+    online_services_subscriptions: 0,
+    money_transfer: 0,
+    delivery_takeaway: 0,
   };
-
-  CATEGORIES.forEach((category) => {
-    defaultValues[category.plannedKey] = 0;
-  });
-
-  return defaultValues;
 };
 
-export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormProps) {
+export function BudgetForm({ onSubmit, defaultMonth, defaultYear, initialValues, mode = 'create' }: BudgetFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: getDefaultValues(defaultMonth, defaultYear),
+    defaultValues: getDefaultValues(defaultMonth, defaultYear, initialValues),
   });
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -135,9 +184,9 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle className="text-2xl">Create Monthly Budget</CardTitle>
+            <CardTitle className="text-2xl">{mode === 'edit' ? 'Edit' : 'Create'} Monthly Budget</CardTitle>
             <CardDescription>
-              Plan your monthly budget by setting income and expense targets.
+              {mode === 'edit' ? 'Update' : 'Plan'} your monthly budget by setting income and expense targets.
             </CardDescription>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -169,9 +218,14 @@ export function BudgetForm({ onSubmit, defaultMonth, defaultYear }: BudgetFormPr
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <MonthYearFields form={form} />
-            <IncomeFields form={form} />
-            <ExpenseFields form={form} />
+            <div className="space-y-8">
+              <MonthYearFields form={form} />
+              <div className="space-y-6">
+                <IncomeFields form={form} />
+                <SavingsFields form={form} />
+                <ExpenseFields form={form} />
+              </div>
+            </div>
           </form>
         </Form>
       </CardContent>

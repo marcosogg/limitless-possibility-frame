@@ -94,8 +94,14 @@ export default function Index() {
   };
 
   const navigateToCreateBudget = () => {
-    navigate("/createbudget", {
+    navigate("/create-budget", {
       state: { month: selectedMonth, year: selectedYear }
+    });
+  };
+
+  const navigateToEditBudget = () => {
+    navigate("/create-budget", {
+      state: { month: selectedMonth, year: selectedYear, budget }
     });
   };
 
@@ -117,6 +123,15 @@ export default function Index() {
       <div className="max-w-[1095px] mx-auto space-y-4">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-[20px] font-semibold text-[#1C1E21]">Monthly Budget Overview</h1>
+          {budget && (
+            <Button
+              onClick={navigateToEditBudget}
+              variant="outline"
+              className="gap-2"
+            >
+              Edit Budget
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
