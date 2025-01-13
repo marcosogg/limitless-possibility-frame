@@ -10,7 +10,7 @@ interface FinancialSummaryProps {
 }
 
 export function FinancialSummary({ totalIncome, plannedBudget, totalSpending }: FinancialSummaryProps) {
-  const availableAmount = totalIncome - totalSpending;
+  const availableToSpend = plannedBudget - totalSpending;
 
   return (
     <Card>
@@ -18,7 +18,7 @@ export function FinancialSummary({ totalIncome, plannedBudget, totalSpending }: 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">Total Income</p>
+              <p className="text-sm text-muted-foreground">Monthly Income</p>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -30,7 +30,7 @@ export function FinancialSummary({ totalIncome, plannedBudget, totalSpending }: 
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-2xl font-bold" aria-label={`Total income: ${formatCurrency(totalIncome)}`}>
+            <p className="text-2xl font-bold" aria-label={`Monthly income: ${formatCurrency(totalIncome)}`}>
               {formatCurrency(totalIncome)}
             </p>
           </div>
@@ -54,7 +54,7 @@ export function FinancialSummary({ totalIncome, plannedBudget, totalSpending }: 
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">Total Spending</p>
+              <p className="text-sm text-muted-foreground">Current Spending</p>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -66,13 +66,13 @@ export function FinancialSummary({ totalIncome, plannedBudget, totalSpending }: 
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-2xl font-bold" aria-label={`Total spending: ${formatCurrency(totalSpending)}`}>
+            <p className="text-2xl font-bold" aria-label={`Current spending: ${formatCurrency(totalSpending)}`}>
               {formatCurrency(totalSpending)}
             </p>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">Available Amount</p>
+              <p className="text-sm text-muted-foreground">Available to Spend</p>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -85,10 +85,10 @@ export function FinancialSummary({ totalIncome, plannedBudget, totalSpending }: 
               </TooltipProvider>
             </div>
             <p 
-              className={`text-2xl font-bold ${availableAmount < 0 ? 'text-destructive' : 'text-green-500'}`}
-              aria-label={`Available amount: ${formatCurrency(availableAmount)}`}
+              className={`text-2xl font-bold ${availableToSpend < 0 ? 'text-destructive' : 'text-green-500'}`}
+              aria-label={`Available to spend: ${formatCurrency(availableToSpend)}`}
             >
-              {formatCurrency(availableAmount)}
+              {formatCurrency(availableToSpend)}
             </p>
           </div>
         </div>
