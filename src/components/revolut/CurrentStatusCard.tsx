@@ -12,15 +12,17 @@ import type { Budget } from "@/types/budget";
 
 interface CurrentStatusCardProps {
   onTotalChange?: (total: number) => void;
+  selectedMonth: number;
+  selectedYear: number;
 }
 
-export const CurrentStatusCard = ({ onTotalChange }: CurrentStatusCardProps) => {
+export const CurrentStatusCard = ({ onTotalChange, selectedMonth, selectedYear }: CurrentStatusCardProps) => {
   const [transactions, setTransactions] = useState<SimpleTransaction[]>([]);
   const [budget, setBudget] = useState<Budget | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedDate = new Date();
+  const selectedDate = new Date(selectedYear, selectedMonth - 1);
 
   const fetchBudget = async (date: Date) => {
     try {

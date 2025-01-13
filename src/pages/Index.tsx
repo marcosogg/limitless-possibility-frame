@@ -147,7 +147,11 @@ export default function Index() {
             )}
             <div className="space-y-4">
               {/* <MonthlyPlanCard budget={budget} /> */}
-              <CurrentStatusCard onTotalChange={setCurrentSpending} />
+              <CurrentStatusCard 
+                onTotalChange={setCurrentSpending} 
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+              />
             </div>
           </div>
         ) : (

@@ -12,7 +12,7 @@ export function BudgetOverview({ monthlyIncome, plannedBudget, currentSpending }
 
   return (
     <div className="bg-white rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.1)] p-4">
-      <h2 className="text-[17px] font-semibold text-[#1C1E21] mb-4">Budget Overview</h2>
+      <h2 className="text-[17px] font-semibold text-[#1C1E21] mb-4">Financial Summary</h2>
       <div className="grid md:grid-cols-4 gap-4">
         {/* Monthly Income Card */}
         <div className="bg-white rounded-lg p-4 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">

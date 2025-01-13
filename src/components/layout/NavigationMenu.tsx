@@ -11,17 +11,17 @@ const navigationItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Create Budget",
+    title: "Budget",
     href: "/create-budget",
     icon: PiggyBank,
   },
   {
-    title: "Bill Reminders",
+    title: "Reminders",
     href: "/bill-reminders",
     icon: Bell,
   },
   {
-    title: "Revolut Import",
+    title: "Import",
     href: "/revolut-import",
     icon: Upload,
   },
