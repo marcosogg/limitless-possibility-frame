@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RootLayout } from "@/components/layout/RootLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import CreateBudget from "./pages/CreateBudget";
 import BillReminders from "./pages/BillReminders";
 import RevolutImport from "./pages/RevolutImport";
@@ -57,6 +58,14 @@ const App = () => (
             }
           />
           <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/create-budget"
             element={
               <ProtectedRoute>
@@ -88,7 +97,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

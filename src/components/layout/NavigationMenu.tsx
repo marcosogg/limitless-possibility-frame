@@ -6,7 +6,7 @@ import { LayoutDashboard, PiggyBank, Bell, Upload } from "lucide-react";
 const navigationItems = [
   {
     title: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
@@ -33,7 +33,9 @@ export function NavigationMenu() {
     <nav className="border-b">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center space-x-4">
-          <div className="mr-4 font-semibold">MyBudget</div>
+          <Link to="/" className="mr-4 font-semibold hover:text-primary">
+            MyBudget
+          </Link>
           
           {navigationItems.map((item) => {
             const isActive = location.pathname === item.href;
