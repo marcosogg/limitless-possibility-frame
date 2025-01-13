@@ -117,29 +117,6 @@ export default function Index() {
       <div className="max-w-[1095px] mx-auto space-y-4">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-[20px] font-semibold text-[#1C1E21]">Monthly Budget Overview</h1>
-          <div className="flex gap-2">
-            <Button 
-              onClick={navigateToCreateBudget}
-              className="bg-[#1877F2] hover:brightness-95 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Budget
-            </Button>
-            <Button 
-              onClick={handleManageBillReminders}
-              className="bg-[#1877F2] hover:brightness-95 text-white"
-            >
-              <Bell className="h-4 w-4 mr-2" />
-              Reminders
-            </Button>
-            <Button 
-              onClick={handleImportStatement}
-              className="bg-[#1877F2] hover:brightness-95 text-white"
-            >
-              <FileInput className="h-4 w-4 mr-2" />
-              Import Statement
-            </Button>
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -172,7 +149,6 @@ export default function Index() {
               <MonthlyPlanCard budget={budget} />
               <RevolutAnalysis onTotalChange={setCurrentSpending} />
             </div>
-            <BillRemindersCard />
           </div>
         ) : (
           <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">

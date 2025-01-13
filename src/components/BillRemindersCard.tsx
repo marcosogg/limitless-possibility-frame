@@ -97,7 +97,7 @@ export function BillRemindersCard() {
   return (
     <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
       <CardHeader className="p-4">
-        <CardTitle className="text-[17px] font-semibold text-[#1C1E21]">Bill Reminders</CardTitle>
+        <CardTitle className="text-[17px] font-semibold text-[#1C1E21]">Bill Remindersss</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="rounded-lg overflow-hidden">
