@@ -10,7 +10,26 @@ export interface RevolutTransaction {
   created_at?: Date;
 }
 
-export type RevolutTransactionDB = RevolutTransaction;
+export interface SimpleTransaction {
+  date: Date;
+  amount: number;
+  description: string;
+  category: string;
+  uploadDate: Date;
+}
+
+export interface RevolutTransactionDB {
+  id: string;
+  user_id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string | null;
+  created_at: string;
+  updated_at: string;
+  profile_id: string;
+  currency: string;
+}
 
 export interface MonthlyApproval {
   id?: string;

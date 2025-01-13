@@ -1,5 +1,5 @@
 import { Budget } from "@/types/budget";
-import { RevolutTransaction } from "@/types/revolut";
+import { SimpleTransaction } from "@/types/revolut";
 import { CATEGORIES } from "@/constants/budget";
 
 export const calculatePercentage = (spent: number, planned: number): number => {
@@ -7,7 +7,7 @@ export const calculatePercentage = (spent: number, planned: number): number => {
   return (spent / planned) * 100;
 };
 
-export const sumMonthlySpending = (transactions: RevolutTransaction[] | undefined): Record<string, number> => {
+export const sumMonthlySpending = (transactions: SimpleTransaction[] | undefined): Record<string, number> => {
   if (!transactions) {
     return {};
   }

@@ -64,7 +64,7 @@ export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
         amount: t.amount,
         description: t.description,
         category: t.category || 'Uncategorized',
-        uploadDate: new Date()
+        uploadDate: new Date(t.created_at)
       }));
 
       // Filter transactions for selected month and remove duplicates
