@@ -42,7 +42,7 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
       // Query matching the actual table structure
       const { data, error } = await supabase
         .from('monthly_approvals')
-        .select('id, user_id, month, year, approved_at')
+        .select('id, user_id, month, year, approved_at, created_at')
         .eq('user_id', user.id)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
