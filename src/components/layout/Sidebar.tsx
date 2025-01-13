@@ -5,6 +5,7 @@ import { Menu, LayoutDashboard, PiggyBank, Bell, Upload, ChevronLeft, ChevronRig
 import { cn } from "@/lib/utils";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { UserMenu } from "./UserMenu";
 
 const navigationItems = [
   {
@@ -38,33 +39,40 @@ function SidebarContent({ onNavigate, showLabels = true }: SidebarContentProps) 
   const location = useLocation();
   
   return (
-    <nav className="flex-1 p-2">
-      {navigationItems.map((item) => {
-        const isActive = location.pathname === item.href;
-        const Icon = item.icon;
-        
-        return (
-          <Link
-            key={item.href}
-            to={item.href}
-            onClick={onNavigate}
-            title={!showLabels ? item.title : undefined}
-          >
-            <Button
-              variant={isActive ? "default" : "ghost"}
-              className={cn(
-                "w-full justify-start space-x-2 mb-1",
-                isActive && "bg-primary text-primary-foreground",
-                !showLabels && "justify-center px-2"
-              )}
+    <div className="flex flex-col flex-1">
+      <nav className="flex-1 p-2">
+        {navigationItems.map((item) => {
+          const isActive = location.pathname === item.href;
+          const Icon = item.icon;
+          
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              onClick={onNavigate}
+              title={!showLabels ? item.title : undefined}
             >
-              <Icon className="h-4 w-4 flex-shrink-0" />
-              {showLabels && <span>{item.title}</span>}
-            </Button>
-          </Link>
-        );
-      })}
-    </nav>
+              <Button
+                variant={isActive ? "default" : "ghost"}
+                className={cn(
+                  "w-full justify-start space-x-2 mb-1",
+                  isActive && "bg-primary text-primary-foreground",
+                  !showLabels && "justify-center px-2"
+                )}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {showLabels && <span>{item.title}</span>}
+              </Button>
+            </Link>
+          );
+        })}
+      </nav>
+      {showLabels && (
+        <div className="p-2 mt-auto border-t">
+          <UserMenu />
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, PiggyBank, Bell, Upload } from "lucide-react";
+import { UserMenu } from "./UserMenu";
 
 const navigationItems = [
   {
@@ -56,6 +57,10 @@ export function NavigationMenu() {
               </Link>
             );
           })}
+          
+          <div className="ml-auto">
+            <UserMenu />
+          </div>
         </div>
       </div>
     </nav>
