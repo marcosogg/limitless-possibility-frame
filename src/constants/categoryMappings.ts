@@ -38,7 +38,7 @@ export const CATEGORY_MAPPINGS: CategoryMappings = {
   "shopping": {
     displayName: "Shopping",
     budgetField: "shopping_spent",
-    vendors: ["Dealz", "Euro Giant", "Maxi Zoo", "RELAY"],
+    vendors: ["Dealz", "Euro Giant", "     ", "RELAY"],
   },
   "miscellaneous": {
     displayName: "Miscellaneous",

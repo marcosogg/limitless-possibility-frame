@@ -8,9 +8,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import { BudgetOverview } from "@/components/dashboard/BudgetOverview";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
-import { BudgetCards } from "@/components/dashboard/BudgetCards";
 import { OverBudgetWarning } from "@/components/dashboard/OverBudgetWarning";
 import { RevolutAnalysis } from "@/components/revolut/RevolutAnalysis";
+import { MonthlyPlanCard } from "@/components/dashboard/MonthlyPlanCard";
 import { CATEGORIES } from "@/constants/budget";
 import type { Budget } from "@/types/budget";
 import { formatCurrency } from "@/lib/utils";
@@ -172,18 +172,11 @@ export default function Index() {
                 overspentCategories={overspentCategories}
               />
             )}
-            <BudgetCards
-              budget={budget}
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <MonthlyPlanCard budget={budget} />
+              <RevolutAnalysis />
+            </div>
             <BillRemindersCard />
-            <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Revolut Transactions Analysis</h2>
-                <RevolutAnalysis />
-              </CardContent>
-            </Card>
           </div>
         ) : (
           <Card className="bg-white shadow-[0_1px_2px_rgba(0,0,0,0.1)]">

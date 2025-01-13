@@ -3,17 +3,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CATEGORIES } from '@/constants/budget';
 import { RevolutMonthSelector } from './RevolutMonthSelector';
 import { SimpleTransaction, RevolutTransactionDB } from '@/types/revolut';
-import { sumMonthlySpending } from '@/utils/budgetCalculations';
+import { sumMonthlySpending, calculatePercentage } from '@/utils/budgetCalculations';
 import { formatCurrency } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { processMonthlyTransactions } from '@/utils/revolutProcessor';
+import { Progress } from "@/components/ui/progress";
+import type { Budget } from "@/types/budget";
 
 export const RevolutAnalysis = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [transactions, setTransactions] = useState<SimpleTransaction[]>([]);
+  const [budget, setBudget] = useState<Budget | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchBudget = async (date: Date) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { data, error: fetchError } = await supabase
+        .from("budgets")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("month", date.getMonth() + 1)
+        .eq("year", date.getFullYear())
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      setBudget(data);
+    } catch (err) {
+      console.error('Error loading budget:', err);
+      setError('Failed to load budget');
+    }
+  };
 
   const handleMonthChange = async (date: Date) => {
     setIsLoading(true);
@@ -36,12 +60,15 @@ export const RevolutAnalysis = () => {
         amount: t.amount,
         description: t.description,
         category: t.category || 'Uncategorized',
-        uploadDate: new Date() // Using current date as upload date since it's not critical for analysis
+        uploadDate: new Date()
       }));
 
       // Filter transactions for selected month and remove duplicates
       const processedTransactions = processMonthlyTransactions(simpleTransactions, date);
       setTransactions(processedTransactions);
+      
+      // Fetch budget for the selected month
+      await fetchBudget(date);
     } catch (err) {
       console.error('Error loading transactions:', err);
       setError('Failed to load transactions');
@@ -58,49 +85,63 @@ export const RevolutAnalysis = () => {
   const categoryTotals = sumMonthlySpending(transactions);
 
   return (
-    <div className="space-y-4">
-      <RevolutMonthSelector 
-        selectedDate={selectedDate}
-        onMonthChange={(date) => {
-          setSelectedDate(date);
-          handleMonthChange(date);
-        }}
-      />
-
-      {error && (
-        <div className="text-red-500 p-4 rounded-md bg-red-50">
-          {error}
+    <Card className="bg-white shadow-sm">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold text-gray-800">
+            Current Status
+          </CardTitle>
+          <RevolutMonthSelector 
+            selectedDate={selectedDate}
+            onMonthChange={(date) => {
+              setSelectedDate(date);
+              handleMonthChange(date);
+            }}
+          />
         </div>
-      )}
+      </CardHeader>
+      <CardContent>
+        {error && (
+          <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
+            {error}
+          </div>
+        )}
 
-      {isLoading ? (
-        <div className="flex justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CATEGORIES.map((category) => {
-            const spent = categoryTotals[category.name] || 0;
-            return (
-              <Card key={category.name}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {CATEGORIES.map((category) => {
+              const spent = categoryTotals[category.name] || 0;
+              const planned = budget ? Number(budget[category.plannedKey as keyof Budget] || 0) : 0;
+              const percentage = calculatePercentage(spent, planned);
+              const remaining = planned - spent;
+              
+              return (
+                <div key={category.name} className="space-y-2">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <category.icon className="h-4 w-4" />
-                      {category.name}
+                      <span className="font-medium">{category.name}</span>
                     </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(spent)}
+                    <div className="text-sm text-gray-600">
+                      {formatCurrency(spent)} / {formatCurrency(planned)}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                  <Progress value={percentage} className="h-2" />
+                  <div className="flex justify-end">
+                    <span className={`text-sm ${remaining < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                      {remaining < 0 ? '' : '+'}{formatCurrency(remaining)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }; 
