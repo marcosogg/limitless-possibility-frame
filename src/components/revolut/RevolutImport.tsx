@@ -6,6 +6,7 @@ import { IMPORT_LIMITS } from '../../constants/revolut';
 import { ImportHistory } from './ImportHistory';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RevolutMonthSelector } from './RevolutMonthSelector';
 
 export function RevolutImport() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +14,7 @@ export function RevolutImport() {
   const [transactions, setTransactions] = useState<RevolutTransaction[]>([]);
   const [unmappedCategories, setUnmappedCategories] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,11 +26,19 @@ export function RevolutImport() {
     setWarnings([]);
 
     try {
-      const result = await processRevolutFile(file);
+      const result = await processRevolutFile(file, selectedDate);
       if (result.success) {
         setTransactions(result.transactions);
         setUnmappedCategories(result.unmappedCategories);
         setWarnings(result.warnings || []);
+        
+        if (result.transactions.length === 0) {
+          toast({
+            title: "No transactions found",
+            description: `No transactions found for ${format(selectedDate, 'MMMM yyyy')} in the uploaded file.`,
+            variant: "default"
+          });
+        }
       } else {
         setError(result.errors.join('\n'));
       }
@@ -46,10 +56,9 @@ export function RevolutImport() {
     setError(null);
 
     try {
-      const now = new Date();
       await approveMonthlyAnalysis(
-        now.getMonth() + 1,
-        now.getFullYear(),
+        selectedDate.getMonth() + 1,
+        selectedDate.getFullYear(),
         transactions
       );
       setTransactions([]);
@@ -57,7 +66,7 @@ export function RevolutImport() {
       setWarnings([]);
       toast({
         title: "Import successful",
-        description: "Transactions have been imported and approved.",
+        description: `Transactions have been imported for ${format(selectedDate, 'MMMM yyyy')}.`,
       });
     } catch (err) {
       setError(err.message);
@@ -95,6 +104,13 @@ export function RevolutImport() {
             <h2 className="text-lg font-semibold mb-4">Import Revolut Transactions</h2>
             
             <div className="space-y-4">
+              <div className="mb-4">
+                <RevolutMonthSelector
+                  selectedDate={selectedDate}
+                  onMonthChange={setSelectedDate}
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Upload Revolut CSV

@@ -68,7 +68,7 @@ function transformAmount(description: string, amount: number): { amount: number;
   };
 }
 
-export async function processRevolutFile(file: File): Promise<ImportResult> {
+export async function processRevolutFile(file: File, selectedDate: Date): Promise<ImportResult> {
   // Validate file size
   if (file.size > IMPORT_LIMITS.maxFileSize) {
     return {
@@ -78,6 +78,9 @@ export async function processRevolutFile(file: File): Promise<ImportResult> {
       unmappedCategories: []
     };
   }
+
+  const selectedMonth = startOfMonth(selectedDate);
+  const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
 
   return new Promise((resolve) => {
     parse(file, {
@@ -123,11 +126,9 @@ export async function processRevolutFile(file: File): Promise<ImportResult> {
               return;
             }
 
-            const currentMonth = startOfMonth(new Date());
-            
-            if (isBefore(date, currentMonth)) {
-              errors.push(`Row ${index + 1}: Transaction date before current month`);
-              return;
+            // Filter transactions not in the selected month
+            if (isBefore(date, selectedMonth) || !isBefore(date, nextMonth)) {
+              return; // Skip transactions outside selected month
             }
 
             if (isAfter(date, IMPORT_LIMITS.validUntil)) {

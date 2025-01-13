@@ -39,25 +39,47 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      // Query matching the actual table structure
       const { data, error } = await supabase
         .from('monthly_approvals')
-        .select('*, revolut_transactions!monthly_approval_id(count)')
+        .select('id, user_id, month, year, approved_at')
         .eq('user_id', user.id)
         .order('year', { ascending: false })
         .order('month', { ascending: false });
 
       if (error) throw error;
-      
-      // Debug log to see the actual data structure
-      console.log('Approvals data:', data);
-      
-      setApprovals(data || []);
+
+      // Get transaction counts in a separate query
+      const { data: transactionCounts, error: countError } = await supabase
+        .from('revolut_transactions')
+        .select('monthly_approval_id')
+        .in('monthly_approval_id', data.map(a => a.id));
+
+      if (countError) throw countError;
+
+      // Group transactions by approval_id to get counts
+      const countsByApprovalId = transactionCounts.reduce((acc, curr) => {
+        acc[curr.monthly_approval_id] = (acc[curr.monthly_approval_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Combine the data
+      const approvalData = data.map(approval => ({
+        ...approval,
+        revolut_transactions: {
+          count: countsByApprovalId[approval.id] || 0
+        }
+      }));
+
+      setApprovals(approvalData);
     } catch (error) {
+      console.error('Error loading approvals:', error);
       toast({
         title: "Error loading import history",
-        description: error.message,
+        description: "Failed to load import history. Please try again.",
         variant: "destructive"
       });
+      setApprovals([]);
     } finally {
       setIsLoading(false);
     }
@@ -70,36 +92,43 @@ export function ImportHistory({ onUndoComplete }: ImportHistoryProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Delete transactions first (they reference the approval)
-      const { error: deleteTransactionsError } = await supabase
-        .from('revolut_transactions')
-        .delete()
-        .match({ monthly_approval_id: selectedApproval.id });
+      setIsLoading(true);
 
-      if (deleteTransactionsError) throw deleteTransactionsError;
+      // Store values before clearing state
+      const undoMonth = selectedApproval.month;
+      const undoYear = selectedApproval.year;
 
-      // Then delete the approval
-      const { error: deleteApprovalError } = await supabase
-        .from('monthly_approvals')
-        .delete()
-        .match({ id: selectedApproval.id });
+      // Clear selection first to prevent UI issues
+      setSelectedApproval(null);
 
-      if (deleteApprovalError) throw deleteApprovalError;
+      // Call RPC
+      const { error: rpcError } = await supabase.rpc('undo_monthly_approval', {
+        p_approval_id: selectedApproval.id,
+        p_user_id: user.id
+      });
 
+      if (rpcError) throw rpcError;
+
+      // Reload data
+      await loadApprovals();
+
+      // Show success message
       toast({
         title: "Import undone",
-        description: `Successfully removed transactions for ${format(new Date(selectedApproval.year, selectedApproval.month - 1), 'MMMM yyyy')}`,
+        description: `Successfully removed transactions for ${format(new Date(undoYear, undoMonth - 1), 'MMMM yyyy')}`,
       });
-
-      setSelectedApproval(null);
-      loadApprovals();
+      
+      // Notify parent
       onUndoComplete?.();
     } catch (error) {
+      console.error('Error undoing import:', error);
       toast({
         title: "Error undoing import",
-        description: error.message,
+        description: "Failed to undo import. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
