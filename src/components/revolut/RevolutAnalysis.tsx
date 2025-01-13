@@ -11,7 +11,11 @@ import { processMonthlyTransactions } from '@/utils/revolutProcessor';
 import { Progress } from "@/components/ui/progress";
 import type { Budget } from "@/types/budget";
 
-export const RevolutAnalysis = () => {
+interface RevolutAnalysisProps {
+  onTotalChange?: (total: number) => void;
+}
+
+export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [transactions, setTransactions] = useState<SimpleTransaction[]>([]);
   const [budget, setBudget] = useState<Budget | null>(null);
@@ -83,6 +87,11 @@ export const RevolutAnalysis = () => {
   }, []);
 
   const categoryTotals = sumMonthlySpending(transactions);
+  const totalSpent = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+
+  useEffect(() => {
+    onTotalChange?.(totalSpent);
+  }, [totalSpent, onTotalChange]);
 
   return (
     <Card className="bg-white shadow-sm">
@@ -139,6 +148,28 @@ export const RevolutAnalysis = () => {
                 </div>
               );
             })}
+
+            <div className="mt-8 pt-4 border-t border-gray-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-lg">Total</span>
+                <div className="text-sm text-gray-600">
+                  {formatCurrency(Object.values(categoryTotals).reduce((a, b) => a + b, 0))} / {
+                    formatCurrency(CATEGORIES.reduce((total, category) => 
+                      total + Number(budget?.[category.plannedKey as keyof Budget] || 0), 0
+                    ))
+                  }
+                </div>
+              </div>
+              <Progress 
+                value={calculatePercentage(
+                  Object.values(categoryTotals).reduce((a, b) => a + b, 0),
+                  CATEGORIES.reduce((total, category) => 
+                    total + Number(budget?.[category.plannedKey as keyof Budget] || 0), 0
+                  )
+                )} 
+                className="h-2" 
+              />
+            </div>
           </div>
         )}
       </CardContent>

@@ -21,6 +21,7 @@ export default function Index() {
   const location = useLocation();
   const [budget, setBudget] = useState<Budget | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentSpending, setCurrentSpending] = useState(0);
   
   // Initialize with state from location or current date
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -92,11 +93,6 @@ export default function Index() {
     return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.plannedKey as keyof Budget]), 0);
   };
 
-  const calculateTotalSpent = () => {
-    if (!budget) return 0;
-    return CATEGORIES.reduce((acc, cat) => acc + Number(budget[cat.spentKey as keyof Budget]), 0);
-  };
-
   const navigateToCreateBudget = () => {
     navigate("/createbudget", {
       state: { month: selectedMonth, year: selectedYear }
@@ -164,7 +160,7 @@ export default function Index() {
             <BudgetOverview
               monthlyIncome={Number(budget.salary) + Number(budget.bonus)}
               plannedBudget={calculateTotalPlanned()}
-              currentSpending={calculateTotalSpent()}
+              currentSpending={currentSpending}
             />
             {isOverBudget && (
               <OverBudgetWarning
@@ -174,7 +170,7 @@ export default function Index() {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <MonthlyPlanCard budget={budget} />
-              <RevolutAnalysis />
+              <RevolutAnalysis onTotalChange={setCurrentSpending} />
             </div>
             <BillRemindersCard />
           </div>
