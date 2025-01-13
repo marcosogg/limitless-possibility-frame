@@ -2,7 +2,7 @@ import { Budget } from "@/types/budget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CATEGORIES } from "@/constants/budget";
 import { formatCurrency } from "@/lib/utils";
-import { calculatePercentage } from "@/utils/budgetCalculations";
+import { calculatePercentage, calculateTotalPlanned } from "@/utils/budgetCalculations";
 
 interface BudgetCardsProps {
   budget: Budget;
@@ -40,7 +40,7 @@ export function BudgetCards({ budget, selectedMonth, selectedYear }: BudgetCards
               <div className="flex justify-between items-center">
                 <span className="text-[13px] font-semibold text-[#1C1E21]">Total Planned</span>
                 <span className="text-[13px] font-semibold text-[#1C1E21]">
-                  €{calculateTotalSpent(budget).toFixed(2)}
+                  €{calculateTotalPlanned(budget).toFixed(2)}
                 </span>
               </div>
             </div>

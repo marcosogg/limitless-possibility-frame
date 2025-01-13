@@ -1,12 +1,12 @@
 import { Budget } from "@/types/budget";
-import { RevolutTransactionDB } from "@/types/revolut";
+import { RevolutTransaction } from "@/types/revolut";
 
 export const calculatePercentage = (spent: number, planned: number): number => {
   if (spent === 0 || planned === 0) return 0;
   return (spent / planned) * 100;
 };
 
-export const sumMonthlySpending = (transactions: RevolutTransactionDB[] | undefined): Record<string, number> => {
+export const sumMonthlySpending = (transactions: RevolutTransaction[] | undefined): Record<string, number> => {
   if (!transactions) {
     return {};
   }

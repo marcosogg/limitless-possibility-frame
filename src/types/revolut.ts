@@ -10,6 +10,8 @@ export interface RevolutTransaction {
   created_at?: Date;
 }
 
+export type RevolutTransactionDB = RevolutTransaction;
+
 export interface MonthlyApproval {
   id?: string;
   userId?: string;
