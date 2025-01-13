@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CATEGORIES } from '@/constants/budget';
-import { RevolutMonthSelector } from './RevolutMonthSelector';
 import { SimpleTransaction, RevolutTransactionDB } from '@/types/revolut';
 import { sumMonthlySpending, calculatePercentage } from '@/utils/budgetCalculations';
 import { formatCurrency } from '@/lib/utils';
@@ -11,16 +10,17 @@ import { processMonthlyTransactions } from '@/utils/revolutProcessor';
 import { Progress } from "@/components/ui/progress";
 import type { Budget } from "@/types/budget";
 
-interface RevolutAnalysisProps {
+interface CurrentStatusCardProps {
   onTotalChange?: (total: number) => void;
 }
 
-export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+export const CurrentStatusCard = ({ onTotalChange }: CurrentStatusCardProps) => {
   const [transactions, setTransactions] = useState<SimpleTransaction[]>([]);
   const [budget, setBudget] = useState<Budget | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const selectedDate = new Date();
 
   const fetchBudget = async (date: Date) => {
     try {
@@ -43,7 +43,7 @@ export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
     }
   };
 
-  const handleMonthChange = async (date: Date) => {
+  const handleLoadTransactions = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -67,12 +67,12 @@ export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
         uploadDate: new Date(t.created_at)
       }));
 
-      // Filter transactions for selected month and remove duplicates
-      const processedTransactions = processMonthlyTransactions(simpleTransactions, date);
+      // Process transactions for the selected month
+      const processedTransactions = processMonthlyTransactions(simpleTransactions, selectedDate);
       setTransactions(processedTransactions);
       
       // Fetch budget for the selected month
-      await fetchBudget(date);
+      await fetchBudget(selectedDate);
     } catch (err) {
       console.error('Error loading transactions:', err);
       setError('Failed to load transactions');
@@ -81,9 +81,9 @@ export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
     }
   };
 
-  // Load initial transactions for current month
+  // Load transactions for the current month on mount
   useEffect(() => {
-    handleMonthChange(selectedDate);
+    handleLoadTransactions();
   }, []);
 
   const categoryTotals = sumMonthlySpending(transactions);
@@ -96,18 +96,9 @@ export const RevolutAnalysis = ({ onTotalChange }: RevolutAnalysisProps) => {
   return (
     <Card className="bg-white shadow-sm">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-semibold text-gray-800">
-            Current Status
-          </CardTitle>
-          <RevolutMonthSelector 
-            selectedDate={selectedDate}
-            onMonthChange={(date) => {
-              setSelectedDate(date);
-              handleMonthChange(date);
-            }}
-          />
-        </div>
+        <CardTitle className="text-lg font-semibold text-gray-800">
+          Current Status
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {error && (

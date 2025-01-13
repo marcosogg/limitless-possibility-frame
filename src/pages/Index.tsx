@@ -9,7 +9,7 @@ import MonthYearPicker from "@/components/MonthYearPicker";
 import { BudgetOverview } from "@/components/dashboard/BudgetOverview";
 import { BillRemindersCard } from "@/components/BillRemindersCard";
 import { OverBudgetWarning } from "@/components/dashboard/OverBudgetWarning";
-import { RevolutAnalysis } from "@/components/revolut/CurrentStatusCard";
+import { CurrentStatusCard } from "@/components/revolut/CurrentStatusCard";
 import { MonthlyPlanCard } from "@/components/dashboard/MonthlyPlanCard";
 import { CATEGORIES } from "@/constants/budget";
 import type { Budget } from "@/types/budget";
@@ -147,7 +147,7 @@ export default function Index() {
             )}
             <div className="space-y-4">
               {/* <MonthlyPlanCard budget={budget} /> */}
-              <RevolutAnalysis onTotalChange={setCurrentSpending} />
+              <CurrentStatusCard onTotalChange={setCurrentSpending} />
             </div>
           </div>
         ) : (
