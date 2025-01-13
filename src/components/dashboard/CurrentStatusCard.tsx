@@ -74,7 +74,7 @@ export function CurrentStatusCard({
               spent={Number(budget[spentKey as keyof Budget] || 0)}
               planned={Number(budget[plannedKey as keyof Budget] || 0)}
               isEditing={isEditing}
-              onSpentChange={handleSpentChange}
+              onSpentChange={(value: number) => handleSpentChange(spentKey, value.toString())}
             />
           ))}
           <div className="pt-4 border-t">
