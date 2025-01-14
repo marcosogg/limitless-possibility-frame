@@ -213,48 +213,131 @@ export type Database = {
         }
         Relationships: []
       }
+      category_mappings: {
+        Row: {
+          created_at: string
+          id: number
+          mappings: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: number
+          mappings: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          mappings?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      monthly_approvals: {
+        Row: {
+          approved_at: string | null
+          created_at: string | null
+          id: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string | null
+          id?: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string | null
+          id?: string
+          month?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       revolut_transactions: {
         Row: {
           amount: number
-          category: string | null
+          category: string
           created_at: string | null
-          currency: string
           date: string
           description: string
           id: string
-          profile_id: string
-          updated_at: string | null
+          month: number | null
+          monthly_approval_id: string
+          original_category: string
+          user_id: string
+          year: number | null
         }
         Insert: {
           amount: number
-          category?: string | null
+          category: string
           created_at?: string | null
-          currency: string
           date: string
           description: string
           id?: string
-          profile_id: string
-          updated_at?: string | null
+          month?: number | null
+          monthly_approval_id: string
+          original_category: string
+          user_id: string
+          year?: number | null
         }
         Update: {
           amount?: number
-          category?: string | null
+          category?: string
           created_at?: string | null
-          currency?: string
           date?: string
           description?: string
           id?: string
-          profile_id?: string
-          updated_at?: string | null
+          month?: number | null
+          monthly_approval_id?: string
+          original_category?: string
+          user_id?: string
+          year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "revolut_transactions_monthly_approval_id_fkey"
+            columns: ["monthly_approval_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_monthly_approvals_v2: {
+        Args: {
+          p_user_id: string
+          p_month: number
+          p_year: number
+        }
+        Returns: {
+          id: string
+          user_id: string
+          month: number
+          year: number
+          approved_at: string
+          created_at: string
+        }[]
+      }
+      undo_monthly_approval: {
+        Args: {
+          p_approval_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
