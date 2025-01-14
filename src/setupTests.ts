@@ -1,12 +1,22 @@
-// src/setupTests.ts
-import { expect, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import matchers from '@testing-library/jest-dom/matchers';
+import '@testing-library/jest-dom';
+import { expect, jest, test } from '@jest/globals';
 
-// Add all matchers to expect
-expect.extend(matchers);
+// Make jest available globally
+global.jest = jest;
+global.expect = expect;
+global.test = test;
 
-// Clean up after each test
-afterEach(() => {
-  cleanup();
+// Mock the matchMedia function for tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
 });
