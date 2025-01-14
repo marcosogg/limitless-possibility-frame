@@ -7,6 +7,15 @@ import { supabase } from '../integrations/supabase/client';
 
 const FAILED_IMPORTS_KEY = 'revolut_failed_imports';
 
+// Define the type for the parsed CSV row
+interface RevolutCSVRow {
+  State: string;
+  'Completed Date': string;
+  Description: string;
+  Amount: string;
+  Type: string;
+}
+
 // Special case handlers
 const SPECIAL_CASES = {
   'to trading places': {
@@ -83,7 +92,7 @@ export async function processRevolutFile(file: File, selectedDate: Date): Promis
   const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
 
   return new Promise((resolve) => {
-    parse(file, {
+    parse<RevolutCSVRow>(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
@@ -112,7 +121,7 @@ export async function processRevolutFile(file: File, selectedDate: Date): Promis
           // 4. Filter out credit card repayments
           .filter(row => !row.Description.toLowerCase().includes('credit card repayment'));
 
-        processedData.forEach((row: any, index: number) => {
+        processedData.forEach((row: RevolutCSVRow, index: number) => {
           try {
             let date;
             try {
@@ -246,11 +255,17 @@ export async function approveMonthlyAnalysis(
   if (approvalError) throw approvalError;
   if (!approval) throw new Error('Failed to create monthly approval');
 
-  // Add user_id and monthly_approval_id to each transaction
+  // Format transactions for database insertion
   const transactionsWithRefs = transactions.map(transaction => ({
-    ...transaction,
     user_id: user.id,
-    monthly_approval_id: approval.id
+    monthly_approval_id: approval.id,
+    date: format(transaction.date, 'yyyy-MM-dd'),
+    description: transaction.description,
+    amount: transaction.amount,
+    category: transaction.category,
+    original_category: transaction.original_category,
+    month,
+    year
   }));
 
   const { error: transactionError } = await supabase
@@ -305,4 +320,4 @@ export async function undoMonthlyApproval(
     .match({ id: approval.id });
 
   if (approvalError) throw approvalError;
-} 
+}
