@@ -197,11 +197,13 @@ export function RevolutImport() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {transaction.category}
-                              {transaction.category === 'Uncategorized' && (
-                                <span className="ml-2 text-yellow-500">
-                                  ({transaction.originalCategory})
-                                </span>
-                              )}
+
+{transaction.category === 'Uncategorized' && (
+  <span className="ml-2 text-yellow-500">
+    ({transaction.original_category})
+  </span>
+)}
+
                             </td>
                           </tr>
                         ))}

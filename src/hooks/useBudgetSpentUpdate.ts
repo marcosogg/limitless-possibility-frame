@@ -3,6 +3,7 @@ import { Budget } from "../types/budget";
 import { RevolutTransactionDB } from "../types/revolut";
 import { sumMonthlySpending } from "../utils/budgetCalculations";
 import { CATEGORIES } from "../constants/budget";
+import { format, parseISO } from "date-fns";
 
 type BudgetSpentKeys = {
   [K in keyof Budget]: K extends `${string}_spent` ? K : never
@@ -17,7 +18,16 @@ export function useBudgetSpentUpdate(
 ) {
   useEffect(() => {
     if (transactions) {
-      const monthlySpending = sumMonthlySpending(transactions);
+      // Convert RevolutTransactionDB to SimpleTransaction format
+      const simpleTransactions = transactions.map(t => ({
+        date: parseISO(t.date),
+        amount: t.amount,
+        description: t.description,
+        category: t.category,
+        uploadDate: parseISO(t.created_at)
+      }));
+
+      const monthlySpending = sumMonthlySpending(simpleTransactions);
 
       const updatedBudget: Budget = {
         ...budget,

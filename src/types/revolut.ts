@@ -21,29 +21,16 @@ export interface SimpleTransaction {
 export interface RevolutTransactionDB {
   id: string;
   user_id: string;
+  monthly_approval_id: string;
   date: string;
   description: string;
   amount: number;
-  category: string | null;
+  category: string;
+  original_category: string;
   created_at: string;
-  updated_at: string;
-  profile_id: string;
+  month?: number;
+  year?: number;
   currency: string;
-}
-
-export interface MonthlyApproval {
-  id?: string;
-  userId?: string;
-  month: number;
-  year: number;
-  approvedAt?: Date;
-  transactions?: RevolutTransaction[];
-}
-
-export interface RevolutImportSettings {
-  budgetUpdateMode: 'override' | 'add';
-  categoryMappings: Record<string, string>;
-  allowFutureMonths: boolean;
 }
 
 export interface ImportResult {
